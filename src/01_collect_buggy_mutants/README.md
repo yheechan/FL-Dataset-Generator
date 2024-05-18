@@ -9,10 +9,16 @@
 2. Executes configure and build script in indicated paths
 3. Generates mutants using MUSICUP and saves to ``generated_mutants/`` directory in working directory
 
+```
+./general_command --subject libxml2
+```
 
-## 01-2 Assign/distribute mutants to:
-* cores in case of utilizing single machine
-* cores of each machine in case of utilizing multi-machines
+
+## 01-2 Prepare for testing mutants to collect buggy mutants
+1. Assign/distribute mutants to each cores of each machines (or each cores of a machine)
+2. Distribute subject directory
+3. Distribute mutation testing bin
+
 
 
 ## 01-3 Test mutants & collect buggy mutants

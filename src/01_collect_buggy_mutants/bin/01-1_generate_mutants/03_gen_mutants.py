@@ -28,6 +28,7 @@ build_sh_wd_key = 'build_script_working_directory'
 configure_no_cov_script = 'configure_no_cov_script.sh'
 configure_yes_cov_script = 'configure_yes_cov_script.sh'
 build_script = 'build_script.sh'
+clean_build_script = 'clean_build_script.sh'
 machines_json_file = 'machines.json'
 configure_json_file = 'configurations.json'
 
@@ -82,6 +83,9 @@ def start_process(subject_name):
     # 5. Show statistics
     show_statistics(subject_working_dir, worksTodo)
 
+    # 6. execute clean_build_script
+    exec_clean_build_script(configs[build_sh_wd_key], subject_working_dir)
+
 
 def initiate_mutants_dir(subject_working_dir, target_files):
     mutants_dir = subject_working_dir / 'generated_mutants'
@@ -93,9 +97,8 @@ def initiate_mutants_dir(subject_working_dir, target_files):
         target_file_path = subject_working_dir / Path(target_file)
         assert target_file_path.exists(), f'{target_file_path} does not exist'
 
-        target_file_name = target_file_path.name
-        single_file_mutant_dir_name = f"mutants-{target_file_name}"
-        single_file_mutant_dir = mutants_dir / single_file_mutant_dir_name
+        target_file_name = target_file.replace('/', '-')
+        single_file_mutant_dir = mutants_dir / f"{target_file_name}"
         single_file_mutant_dir.mkdir(exist_ok=True, parents=True)
 
         target_file_pair.append((target_file_path, single_file_mutant_dir))
@@ -182,6 +185,21 @@ def show_statistics(subject_working_dir, worksTodo):
     print('>Mutants per file:')
     for target_file, mutant_cnt in mutant_cnt_per_file.items():
         print(f'{target_file}: {mutant_cnt}')
+
+
+def exec_clean_build_script(build_sh_wd, subject_working_dir):
+    global clean_build_script
+
+    build_sh_wd = subject_working_dir / build_sh_wd
+    clean_build_sh = build_sh_wd / clean_build_script
+    assert clean_build_sh.exists(), f"Clean build script {clean_build_sh} does not exist"
+
+    cmd = ['bash', clean_build_sh]
+    res = sp.run(cmd, cwd=build_sh_wd)
+    if res.returncode != 0:
+        raise Exception('Failed to execute clean build script')
+    
+    print('Executed clean build script')
 
 
     

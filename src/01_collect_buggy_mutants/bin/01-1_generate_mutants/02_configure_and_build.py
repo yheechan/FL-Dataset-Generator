@@ -26,6 +26,7 @@ build_sh_wd_key = 'build_script_working_directory'
 configure_no_cov_script = 'configure_no_cov_script.sh'
 configure_yes_cov_script = 'configure_yes_cov_script.sh'
 build_script = 'build_script.sh'
+clean_build_script = 'clean_build_script.sh'
 machines_json_file = 'machines.json'
 configure_json_file = 'configurations.json'
 
@@ -60,7 +61,7 @@ def start_process(subject_name):
     # 1. Read configurations
     configs = read_configs(subject_name, subject_working_dir)
 
-    # 2. Initialize working directory
+    # 2. Execute configure and build scripts
     configure_and_build(configs, subject_working_dir)
 
 

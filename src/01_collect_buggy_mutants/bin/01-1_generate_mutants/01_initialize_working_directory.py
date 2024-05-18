@@ -26,6 +26,7 @@ build_sh_wd_key = 'build_script_working_directory'
 configure_no_cov_script = 'configure_no_cov_script.sh'
 configure_yes_cov_script = 'configure_yes_cov_script.sh'
 build_script = 'build_script.sh'
+clean_build_script = 'clean_build_script.sh'
 machines_json_file = 'machines.json'
 configure_json_file = 'configurations.json'
 
@@ -80,12 +81,17 @@ def initialize_working_directory(configs, subject_name):
     if res != 0:
         raise Exception('Failed to copy configure directory to working directory')
     
-    # Copy configure and build script to working directory
+    # Copy configure and build and clean_build script to working directory
     configure_file_position = working_dir / configs[config_sh_wd_key]
     build_file_position = working_dir / configs[build_sh_wd_key]
+    clean_build_file_position = working_dir / configs[build_sh_wd_key]
 
     configure_file = new_configure_dir / configure_no_cov_script
+    assert configure_file.exists(), 'Configure script does not exist'
     build_file = new_configure_dir / build_script
+    assert build_file.exists(), 'Build script does not exist'
+    clean_build_file = new_configure_dir / clean_build_script
+    assert clean_build_file.exists(), 'Clean build script does not exist'
 
     cmd = ['cp', configure_file, configure_file_position]
     res = sp.call(cmd)
@@ -96,6 +102,11 @@ def initialize_working_directory(configs, subject_name):
     res = sp.call(cmd)
     if res != 0:
         raise Exception('Failed to copy build script to working directory')
+    
+    cmd = ['cp', clean_build_file, clean_build_file_position]
+    res = sp.call(cmd)
+    if res != 0:
+        raise Exception('Failed to copy clean build script to working directory')
     
     # make external_tools directory in working directory
     ext_dir = working_dir / 'external_tools'
