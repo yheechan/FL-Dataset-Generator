@@ -56,8 +56,8 @@ def start_process(subject_name):
     # machine_cores_list (list): [machine_name:core_id]
     machine_cores_list = get_machine_cores_list(configs, subject_working_dir)
 
-    # 4. distribute subject repository to each machine-core
-    distribute_subject_repo(configs, subject_working_dir, machine_cores_list)
+    # 4. distribute config directory to each machine-core
+    distribute_test_mutant_cmd(configs, subject_working_dir, machine_cores_list)
 
 
 
@@ -138,69 +138,57 @@ def get_from_local_machine(configs):
     return machine_cores_list
 
 
-def distribute_subject_repo(configs, subject_working_dir, machine_cores_list):
+def distribute_test_mutant_cmd(configs, subject_working_dir, machine_cores_list):
     global use_distributed_machines
 
     if configs[use_distributed_machines] == True:
-        distribute_subject_repo_distributed_machines(configs, subject_working_dir, machine_cores_list)
-    else:
-        distribute_subject_repo_single_machine(configs, subject_working_dir, machine_cores_list)
+        distribute_test_mutant_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list)
 
 
-def distribute_subject_repo_distributed_machines(configs, subject_working_dir, machine_cores_list):
+def distribute_test_mutant_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list):
+    global bin_dir
+
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/{subject_name}-working_directory/workers/"
+    base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/"
+    machine_bin_dir = base_dir + 'bin/'
 
-    subject_repo = subject_working_dir / subject_name
-    assert subject_repo.exists(), f"Subject repository {subject_repo} does not exist"
+    test_mutant_cmd_dir = bin_dir / '01-3_test_mutants'
+    assert test_mutant_cmd_dir.exists(), f"Test mutants directory {test_mutant_cmd_dir} does not exist"
 
-    bash_file = open('02-1_distribute_repo.sh', 'w')
+    bash_file = open('04-1_distribute_test_mutants_cmd.sh', 'w')
     bash_file.write('date\n')
     cnt = 0
     laps = 50
+    machine_list = []
     for machine_core in machine_cores_list:
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
-        machine_core_dir = f"{base_dir}{machine_id}/{core_id}/"
 
-        cmd = 'scp -r {} {}:{} & \n'.format(subject_repo, machine_id, machine_core_dir)
-        bash_file.write(f"{cmd}")
+        if machine_id not in machine_list:
+            machine_list.append(machine_id)
+            cmd = "scp -r {} {}:{} & \n".format(test_mutant_cmd_dir, machine_id, machine_bin_dir)
+            bash_file.write(cmd)
         
-        cnt += 1
-        if cnt % laps == 0:
-            bash_file.write("sleep 0.2s\n")
-            bash_file.write("wait\n")
+            cnt += 1
+            if cnt % laps == 0:
+                bash_file.write("sleep 0.2s\n")
+                bash_file.write("wait\n")
     
     bash_file.write('echo scp done, waiting...\n')
     bash_file.write('date\n')
     bash_file.write('wait\n')
     bash_file.write('date\n')
     
-    cmd = ['chmod', '+x', '02-1_distribute_repo.sh']
+    cmd = ['chmod', '+x', '04-1_distribute_test_mutants_cmd.sh']
     res = sp.call(cmd)
 
     # time.sleep(1)
 
-    # cmd = ['./02-1_distribute_repo.sh']
+    # cmd = ['./04-1_distribute_test_mutants_cmd.sh']
     # print("Distributing subject repository to workers...")
     # res = sp.call(cmd)
 
-def distribute_subject_repo_single_machine(configs, subject_working_dir, machine_cores_list):
-    workers_dir = subject_working_dir / 'workers'
-
-    subject_repo = subject_working_dir / configs['subject_name']
-    assert subject_repo.exists(), f"Subject repository {subject_repo} does not exist"
-
-    for machine_core in machine_cores_list:
-        machine_id = machine_core.split(':')[0]
-        core_id = machine_core.split(':')[1]
-        machine_core_dir = workers_dir / f"{machine_id}/{core_id}"
-
-        cmd = ['cp', '-r', subject_repo, machine_core_dir]
-        res = sp.call(cmd)
-
-    print("Distributed subject repository to workers")
 
 
 def make_parser():

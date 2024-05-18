@@ -71,11 +71,19 @@ def start_process(subject_name):
 def get_mutants_list(configs, subject_working_dir):
     generated_mutants_dir = subject_working_dir / 'generated_mutants'
 
+    subj_lang = None
+    if configs["subject_language"] == "C":
+        subj_lang = "*.c"
+    elif configs["subject_language"] == "CPP":
+        subj_lang = "*.cpp"
+    else:
+        raise Exception("Subject language is not supported")
+
     mutants_list = []
     for target_mutants_dir in generated_mutants_dir.iterdir():
         target_file = target_mutants_dir.name.replace('-', '/')
 
-        target_mutants = list(target_mutants_dir.glob('*.c'))
+        target_mutants = list(target_mutants_dir.glob(subj_lang))
         for mutant in target_mutants:
             mutants_list.append((target_file, mutant))
 
@@ -168,7 +176,9 @@ def initialize_directories(configs, subject_working_dir, distribution_machineCor
 def initialize_directories_distributed_machines(configs, subject_working_dir, distribution_machineCore2mutantList):
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/{subject_name}-working_directory/workers/"
+    base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/"
+    subject_working_dir = base_dir + f"{subject_name}-working_directory/"
+    workers_dir = subject_working_dir + 'workers/'
 
 
     bash_file = open('01-1_initiate_directory.sh', 'w')
@@ -178,7 +188,15 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
     for machine_core, mutants in distribution_machineCore2mutantList.items():
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
-        machine_core_dir = f"{base_dir}{machine_id}/{core_id}/assigned_mutations/"
+        machine_core_dir = f"{workers_dir}{machine_id}/{core_id}/assigned_mutations/"
+
+        machines_bin_dir = f"{base_dir}bin/"
+
+        machine_list = []
+        if machine_id not in machine_list:
+            machine_list.append(machine_id)
+            cmd = 'ssh {} \"mkdir -p {}" & \n'.format(machine_id, machines_bin_dir)
+            bash_file.write(cmd)
 
         target_directories = []
         for target_file, mutant in mutants:
@@ -194,6 +212,10 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
                 if cnt % laps == 0:
                     bash_file.write("sleep 0.5s\n")
                     bash_file.write("wait\n")
+        
+        buggy_mutant_dir = f"{workers_dir}{machine_id}/{core_id}/buggy_mutants/"
+        cmd = 'ssh {} \"mkdir -p {}" & \n'.format(machine_id, buggy_mutant_dir)
+        bash_file.write(cmd)
 
     
     bash_file.write('echo ssh done, waiting...\n')
@@ -227,6 +249,9 @@ def initialize_directories_single_machine(configs, subject_working_dir, distribu
                 target_directories.append(target_dir)
                 target_dir_path = machine_core_dir / target_dir
                 target_dir_path.mkdir(exist_ok=True, parents=True)
+        
+        buggy_mutant_dir = workers_dir / f"{machine_id}/{core_id}" / 'buggy_mutants'
+        buggy_mutant_dir.mkdir(exist_ok=True, parents=True)
         
 
 def distribute_mutants_to_workers(configs, subject_working_dir, distribution_machineCore2mutantList):

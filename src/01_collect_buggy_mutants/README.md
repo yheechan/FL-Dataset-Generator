@@ -10,7 +10,7 @@
 3. Generates mutants using MUSICUP and saves to ``generated_mutants/`` directory in working directory
 
 ```
-./general_command --subject libxml2
+$ ./general_command.py --subject libxml2
 ```
 
 
@@ -19,10 +19,31 @@
 2. Distribute subject directory
 3. Distribute mutation testing bin
 
+### Usage:
+* When using single machine
+```
+$ ./general_command.py --subject libxml2
+```
+
+* When using distributed machines
+```
+$ ./general_command.py --subject libxml2
+$ ./01-1_initiate_directory.sh
+$ ./01-2_distribute_mutants.sh
+$ ./02-1_distribute_repo.sh
+$ ./03-1_distribute_config.sh
+$ ./04-1_distribute_test_mutants_cmd.sh
+```
+
 
 
 ## 01-3 Test mutants & collect buggy mutants
-* test mutants on single machine
+* When using single machine
+```
+$ ./01_initial_configure_and_build.py --subject libxml2 --worker gaster23.swtv/core0
+$ ./02_test_mutants.py --subject libxml2 --worker gaster23.swtv/core0
+```
+
 * test mutants on multi-machines
 
 
