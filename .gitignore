@@ -1,0 +1,8 @@
+patch_files/
+extra_test_input_files/
+.vscode/
+working_directory/
+datasets/
+learn_LIBXML2/
+libxml2/
+subjects/

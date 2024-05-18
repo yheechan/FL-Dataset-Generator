@@ -1,0 +1,9 @@
+*.swp
+
+*.o
+*.bc
+*.ii
+music
+a.out
+*.tmp
+.vscode/
