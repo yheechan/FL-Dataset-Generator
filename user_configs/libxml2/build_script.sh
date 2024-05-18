@@ -1,0 +1,1 @@
+bear make -j20 runtest

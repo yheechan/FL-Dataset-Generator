@@ -1,0 +1,26 @@
+{
+    "home_directory": "/home/yangheechan/",
+    "subject_name": "libxml2",
+    "configure_script_working_directory": "libxml2/",
+    "build_script_working_directory": "libxml2/",
+    "compile_command_path": "libxml2/compile_commands.json",
+    "test_case_directory": "libxml2/testcases/",
+    "subject_language": "C",
+    "use_distributed_machines": false,
+    "single_machine": {
+        "machine_cores": 32
+    },
+    "multi_machines": {
+        "machine_count": 25,
+        "machine_cores": 8,
+        "machine_server_file": "machines"
+    },
+    "target_files": [
+        "libxml2/parser.c",
+        "libxml2/HTMLparser.c",
+        "libxml2/relaxng.c",
+        "libxml2/xmlregexp.c",
+        "libxml2/xmlschemas.c"
+    ],
+    "number_of_mutants_utilized_for_MBFL": 192
+}

@@ -4,5 +4,5 @@ extra_test_input_files/
 working_directory/
 datasets/
 learn_LIBXML2/
-libxml2/
 subjects/
+*-working_directory/
