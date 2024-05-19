@@ -188,7 +188,7 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
     for machine_core, mutants in distribution_machineCore2mutantList.items():
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
-        machine_core_dir = f"{workers_dir}{machine_id}/{core_id}/assigned_mutations/"
+        machine_core_dir = f"{workers_dir}{machine_id}/{core_id}/assigned_mutants/"
 
         machines_bin_dir = f"{base_dir}bin/"
 
@@ -240,7 +240,7 @@ def initialize_directories_single_machine(configs, subject_working_dir, distribu
     for machine_core, mutants in distribution_machineCore2mutantList.items():
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
-        machine_core_dir = workers_dir / f"{machine_id}/{core_id}" / 'assigned_mutations'
+        machine_core_dir = workers_dir / f"{machine_id}/{core_id}" / 'assigned_mutants'
         
         target_directories = []
         for target_file, mutant in mutants:
@@ -274,7 +274,7 @@ def distribute_mutants_to_workers_distributed_machines(configs, subject_working_
     for machine_core, mutants in distribution_machineCore2mutantList.items():
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
-        machine_core_dir = f"{base_dir}{machine_id}/{core_id}/assigned_mutations/"
+        machine_core_dir = f"{base_dir}{machine_id}/{core_id}/assigned_mutants/"
 
         for target_file, mutant in mutants:
             target_dir = mutant.parent.name
@@ -307,7 +307,7 @@ def distribute_mutants_to_workers_single_machine(configs, subject_working_dir, d
     for machine_core, mutants in distribution_machineCore2mutantList.items():
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
-        machine_core_dir = workers_dir / f"{machine_id}/{core_id}" / 'assigned_mutations'
+        machine_core_dir = workers_dir / f"{machine_id}/{core_id}" / 'assigned_mutants'
 
         for target_file, mutant in mutants:
             target_dir = mutant.parent.name

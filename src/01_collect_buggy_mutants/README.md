@@ -38,16 +38,16 @@ $ ./04-1_distribute_test_mutants_cmd.sh
 
 
 ## 01-3 Test mutants & collect buggy mutants
-* When using single machine
+* Command to run bug collection of one worker (core)
 ```
-$ ./01_initial_configure_and_build.py --subject libxml2 --worker gaster23.swtv/core0
-$ ./02_test_mutants.py --subject libxml2 --worker gaster23.swtv/core0
+$ ./general_command.py --subject libxml2 --worker gaster23.swtv/core0
+```
+* When using multi-machines
+```
+$ ./03_test_mutants_on_distributed_machines.py --subject libxml2
+$ ./03-1_test_mutants_on_distributed_machines.sh
 ```
 
-* test mutants on multi-machines
 
+## 01-4 Gather buggy mutants (only in use of multi-machines)
 
-## 01-4 Retrieve mutants from distributed machines (only in use of multi-machines)
-
-
-## 01-5 Gather buggy mutants to one directory

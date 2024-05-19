@@ -147,7 +147,7 @@ def gen_mutants_worker(target_file, output_dir, compile_command, music_cmd):
         music_cmd,
         str(target_file),
         '-o', str(output_dir),
-        '-ll', '2',
+        '-ll', '1',
         '-l', '2',
         '-d', unused_ops,
         '-p', str(compile_command)

@@ -86,7 +86,7 @@ def get_tc_suite(configs, core_working_dir):
 
 
 def get_mutants_list(configs, core_working_dir):
-    generated_mutants_dir = core_working_dir / 'assigned_mutations'
+    generated_mutants_dir = core_working_dir / 'assigned_mutants'
 
     subj_lang = None
     if configs["subject_language"] == "C":
@@ -131,7 +131,7 @@ def test_mutants(configs, core_working_dir, test_suite, tc_dir, mutants_list):
         # 4. run the test suite
         passing_tcs, failing_tcs = run_test_suite(test_suite, tc_dir)
         if passing_tcs == [-1] and failing_tcs == [-1]:
-            print('Crash detected')
+            print('Crash detected on {}'.format(mutant.name))
             apply_patch(target_file, mutant, patch_file, core_working_dir, True)
             continue
 
@@ -142,7 +142,7 @@ def test_mutants(configs, core_working_dir, test_suite, tc_dir, mutants_list):
             continue
 
         # 6. Save the mutant if any test case fails
-        save_buggy_mutant(mutant, passing_tcs, failing_tcs, core_working_dir)
+        save_buggy_mutant(target_file, mutant, passing_tcs, failing_tcs, core_working_dir)
 
         # X. Apply patch reverse
         apply_patch(target_file, mutant, patch_file, core_working_dir, True)
@@ -192,8 +192,13 @@ def run_test_suite(test_suite, tc_dir):
     return passing_tcs, failing_tcs
 
 def run_tc(tc_script, tc_dir):
-    cmd = f"timeout 2s ./{tc_script}"
-    res = sp.run(cmd, shell=True, cwd=tc_dir, stdout=sp.PIPE, stderr=sp.PIPE)
+    cmd = f"./{tc_script}"
+
+    try:
+        res = sp.run(cmd, shell=True, cwd=tc_dir, stdout=sp.PIPE, stderr=sp.PIPE, timeout=1)
+    except sp.TimeoutExpired:
+        print(f"Testcase {tc_script} timeout")
+        return -1
 
     # if res.returncode != 0:
     #     print(f"Testcase {tc_script} failed")
@@ -205,7 +210,7 @@ def run_tc(tc_script, tc_dir):
     # print(f"tc_script: {tc_script}, returncode: {res.returncode}")
     return res.returncode
 
-def save_buggy_mutant(mutant, passing_tcs, failing_tcs, core_working_dir):
+def save_buggy_mutant(target_file, mutant, passing_tcs, failing_tcs, core_working_dir):
     buggy_mutant_dir = core_working_dir / 'buggy_mutants'
     assert buggy_mutant_dir.exists(), f"Buggy mutants directory {buggy_mutant_dir} does not exist"
 
@@ -222,9 +227,9 @@ def save_buggy_mutant(mutant, passing_tcs, failing_tcs, core_working_dir):
     passing_tcs_file = mutant_dir / 'passing_tcs.txt'
     passing_tcs_file.write_text('\n'.join(passing_tcs))
 
-    # save the file too
-    mutant_file = mutant_dir / mutant.name
-    mutant_file.write_text(mutant.read_text())
+    # save the string of targetfile and mutant name as csv
+    csv_file = mutant_dir / 'bug_info.csv'
+    csv_file.write_text(f"target_code_file,mutant_code_file\n{target_file},{mutant.name}")
 
     print(f"Mutant {mutant.name} is saved")
 
