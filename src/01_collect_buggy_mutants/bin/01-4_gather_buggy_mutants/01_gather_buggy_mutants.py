@@ -85,7 +85,7 @@ def retrieve_buggy_mutants_distributed_machines(configs, subject_working_dir, bu
         core_id = machine_core.split(':')[1]
         machine_core_dir = f"{workers}{machine_id}/{core_id}/buggy_mutants/*"
 
-        cmd = 'scp {}:{} {} & \n'.format(machine_id, machine_core_dir, buggy_mutant_dir)
+        cmd = 'scp -r {}:{} {} & \n'.format(machine_id, machine_core_dir, buggy_mutant_dir)
         bash_file.write(f"{cmd}")
         
         cnt += 1

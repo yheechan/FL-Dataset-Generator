@@ -50,4 +50,7 @@ $ ./03-1_test_mutants_on_distributed_machines.sh
 
 
 ## 01-4 Gather buggy mutants (only in use of multi-machines)
+```
+$ ./01_gather_buggy_mutants.py --subject libxml2
+```
 
