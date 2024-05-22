@@ -9,12 +9,12 @@ import multiprocessing
 
 # Current working directory
 script_path = Path(__file__).resolve()
-gen_mutants_dir = script_path.parent
-bin_dir = gen_mutants_dir.parent
-collect_buggy_mutants_dir = bin_dir.parent
+prepare_testing_dir = script_path.parent
+bin_dir = prepare_testing_dir.parent
+select_usable_buggy_versions = bin_dir.parent
 
 # General directories
-src_dir = collect_buggy_mutants_dir.parent
+src_dir = select_usable_buggy_versions.parent
 root_dir = src_dir.parent
 user_configs_dir = root_dir / 'user_configs'
 subjects_dir = root_dir / 'subjects'
@@ -43,7 +43,7 @@ def main():
 def start_process(subject_name):
     global configure_json_file
 
-    subject_working_dir = collect_buggy_mutants_dir / f"{subject_name}-working_directory"
+    subject_working_dir = select_usable_buggy_versions / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
     # 1. Read configurations
@@ -135,7 +135,7 @@ def distribute_config_dir_distributed_machines(configs, subject_working_dir, mac
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
     base_dir = f"{home_directory}{subject_name}-select_usable_buggy_versions/"
-    machine_subject_working_dir = base_dir = f"{subject_name}-working_directory/"
+    machine_subject_working_dir = base_dir + f"{subject_name}-working_directory/"
 
     # item being sent
     config_dir = subject_working_dir / f"{subject_name}-configures"

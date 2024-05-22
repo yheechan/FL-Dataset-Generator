@@ -9,8 +9,8 @@ import multiprocessing
 
 # Current working directory
 script_path = Path(__file__).resolve()
-prepare_testing_dir = script_path.parent
-bin_dir = prepare_testing_dir.parent
+test_buggy_versions_dir = script_path.parent
+bin_dir = test_buggy_versions_dir.parent
 select_usable_buggy_versions = bin_dir.parent
 
 # General directories
@@ -49,28 +49,12 @@ def start_process(subject_name):
     # 1. Read configurations
     configs = read_configs(subject_name, subject_working_dir)
 
-    # 2. make a list of buggy_versions: list, path to the buggy versions directory
-    buggy_versions = get_selected_buggy_versions(subject_working_dir)
-
-    # 3. get machine-core information
+    # 2. get machine-core information
     # machine_cores_list (list): [machine_name:core_id]
     machine_cores_list = get_machine_cores_list(configs, subject_working_dir)
 
-    # 4. distribute config directory to each machine-core
-    distribute_test_versions(configs, subject_working_dir, machine_cores_list)
-
-
-
-def get_selected_buggy_versions(subject_working_dir):
-    selected_buggy_versions = subject_working_dir / 'initial_selected_buggy_versions'
-
-    buggy_versions = []
-    for bug_version_dir in selected_buggy_versions.iterdir():
-        buggy_versions.append(bug_version_dir)
-    
-    print(f"Total buggy versions: {len(buggy_versions)}")
-
-    return buggy_versions
+    # 3. make script to execute test mutants on distributed machines
+    exec_test_buggy_versions(configs, subject_working_dir, machine_cores_list)
 
 
 def get_machine_cores_list(configs, subject_working_dir):
@@ -80,7 +64,7 @@ def get_machine_cores_list(configs, subject_working_dir):
     if configs[use_distributed_machines] == True:
         machine_core_list = get_from_distributed_machines(configs, subject_working_dir)
     else:
-        machine_core_list = get_from_local_machine(configs)
+        raise Exception('This command is not for local single machine use')
 
     print(f"Machine cores: {len(machine_core_list)}")
     
@@ -112,38 +96,18 @@ def get_from_distributed_machines(configs, subject_working_dir):
     
     return machine_cores_list
 
-def get_from_local_machine(configs):
-    machine_name = configs['single_machine']['machine_name']
-    core_cnt = configs['single_machine']['machine_cores']
-
-    machine_cores_list = []
-    for num in range(core_cnt):
-        core_id = f"core{num}"
-        machine_cores_list.append(f"{machine_name}:{core_id}")
-    
-    return machine_cores_list
-
-
-def distribute_test_versions(configs, subject_working_dir, machine_cores_list):
-    global use_distributed_machines
-
-    if configs[use_distributed_machines] == True:
-        distribute_test_versions_distributed_machines(configs, subject_working_dir, machine_cores_list)
-
-
-def distribute_test_versions_distributed_machines(configs, subject_working_dir, machine_cores_list):
+def exec_test_buggy_versions(configs, subject_working_dir, machine_cores_list):
     global bin_dir
 
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
     base_dir = f"{home_directory}{subject_name}-select_usable_buggy_versions/"
-    machine_bin_dir = base_dir + 'bin/'
+    machine_bin_dir = base_dir + 'bin/02-3_test_buggy_versions/'
 
-    # item being sent
-    test_versions_cmd_dir = bin_dir / '02-3_test_buggy_versions'
-    assert test_versions_cmd_dir.exists(), f"Test mutants directory {test_versions_cmd_dir} does not exist"
+    test_mutant_cmd_dir = bin_dir / '02-3_test_buggy_versions'
+    assert test_mutant_cmd_dir.exists(), f"Test mutants directory {test_mutant_cmd_dir} does not exist"
 
-    bash_file = open('04-1_distribute_test_buggy_versions_cmd.sh', 'w')
+    bash_file = open('03-1_test_buggy_versions_on_distributed_machines.sh', 'w')
     bash_file.write('date\n')
     cnt = 0
     laps = 50
@@ -151,30 +115,31 @@ def distribute_test_versions_distributed_machines(configs, subject_working_dir, 
     for machine_core in machine_cores_list:
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
+        worker = f"{machine_id}/{core_id}"
 
-        if machine_id not in machine_list:
-            machine_list.append(machine_id)
-            cmd = "scp -r {} {}:{} & \n".format(test_versions_cmd_dir, machine_id, machine_bin_dir)
-            bash_file.write(cmd)
-        
-            cnt += 1
-            if cnt % laps == 0:
-                bash_file.write("sleep 0.2s\n")
-                bash_file.write("wait\n")
+        cmd = "ssh {} \"cd {} && ./general_command.py --subject {} --worker {} > usable_bugs.{} 2>&1\" & \n".format(
+            machine_id, machine_bin_dir, subject_name, worker, machine_core
+        )
+        bash_file.write(cmd)
+
+        cnt += 1
+        if cnt % laps == 0:
+            bash_file.write("sleep 0.2s\n")
+            # bash_file.write("wait\n")
     
     bash_file.write('echo scp done, waiting...\n')
     bash_file.write('date\n')
     bash_file.write('wait\n')
     bash_file.write('date\n')
     
-    cmd = ['chmod', '+x', '04-1_distribute_test_buggy_versions_cmd.sh']
+    cmd = ['chmod', '+x', '03-1_test_buggy_versions_on_distributed_machines.sh']
     res = sp.call(cmd)
 
     # time.sleep(1)
 
-    # cmd = ['./04-1_distribute_test_buggy_versions_cmd.sh']
+    # cmd = ['./03-1_test_buggy_versions_on_distributed_machines.sh']
     # print("Distributing subject repository to workers...")
-    # res = sp.call(cmd)
+    # res = sp.call(cmd
 
 
 

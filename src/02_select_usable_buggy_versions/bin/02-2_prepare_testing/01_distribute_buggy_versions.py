@@ -180,7 +180,10 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
         cmd = 'ssh {} \"mkdir -p {}" & \n'.format(machine_id, machine_core_dir)
         bash_file.write(cmd)
 
-
+        cnt += 1
+        if cnt % laps == 0:
+            bash_file.write("sleep 0.5s\n")
+            bash_file.write("wait\n")
 
         # 2. create machines bin dir
         machines_bin_dir = f"{base_dir}bin/"
@@ -189,6 +192,11 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
             machine_list.append(machine_id)
             cmd = 'ssh {} \"mkdir -p {}" & \n'.format(machine_id, machines_bin_dir)
             bash_file.write(cmd)
+        
+        cnt += 1
+        if cnt % laps == 0:
+            bash_file.write("sleep 0.5s\n")
+            bash_file.write("wait\n")
 
         
         # 3. create usable dir

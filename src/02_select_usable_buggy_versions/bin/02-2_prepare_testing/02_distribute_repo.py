@@ -184,7 +184,10 @@ def distribute_subject_repo_single_machine(configs, subject_working_dir, machine
     for machine_core in machine_cores_list:
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
-        machine_core_dir = workers_dir / f"{machine_id}/{core_id}"
+        machine_core_dir = workers_dir / f"{machine_id}/{core_id}/"
+
+        if not machine_core_dir.exists():
+            continue
 
         cmd = ['cp', '-r', subject_repo, machine_core_dir]
         res = sp.call(cmd)
