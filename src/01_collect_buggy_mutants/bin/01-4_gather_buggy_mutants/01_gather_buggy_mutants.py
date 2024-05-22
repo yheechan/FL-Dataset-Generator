@@ -9,8 +9,8 @@ import multiprocessing
 
 # Current working directory
 script_path = Path(__file__).resolve()
-gen_mutants_dir = script_path.parent
-bin_dir = gen_mutants_dir.parent
+gather_buggy_mutants_dir = script_path.parent
+bin_dir = gather_buggy_mutants_dir.parent
 collect_buggy_mutants_dir = bin_dir.parent
 
 # General directories

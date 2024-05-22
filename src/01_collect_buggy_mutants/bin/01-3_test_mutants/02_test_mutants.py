@@ -7,8 +7,8 @@ import subprocess as sp
 
 # Current working directory
 script_path = Path(__file__).resolve()
-gen_mutants_dir = script_path.parent
-bin_dir = gen_mutants_dir.parent
+test_mutants_dir = script_path.parent
+bin_dir = test_mutants_dir.parent
 collect_buggy_mutants_dir = bin_dir.parent
 
 # General directories
