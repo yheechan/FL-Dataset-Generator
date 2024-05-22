@@ -1,2 +1,2 @@
-target_code_file,bug_code_file,buggy_lineno
+target_code_file,buggy_code_file,buggy_lineno
 libxml2/HTMLparser.c,HTMLparser.issue318.c,3034
