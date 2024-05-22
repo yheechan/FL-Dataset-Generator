@@ -26,7 +26,7 @@ build_sh_wd_key = 'build_script_working_directory'
 configure_no_cov_script = 'configure_no_cov_script.sh'
 configure_yes_cov_script = 'configure_yes_cov_script.sh'
 build_script = 'build_script.sh'
-clean_build_script = 'clean_build_script.sh'
+clean_script = 'clean_script.sh'
 machines_json_file = 'machines.json'
 configure_json_file = 'configurations.json'
 
@@ -35,10 +35,16 @@ crash_codes = [
     132,  # SIGILL
     133,  # SIGTRAP
     134,  # SIGABRT
+    135,  # SIGBUS
     136,  # SIGFPE
     137,  # SIGKILL
     138,  # SIGBUS
     139,  # segfault
+    140,  # SIGPIPE
+    141,  # SIGALRM
+    124,  # timeout
+    143,  # SIGTERM
+    129,  # SIGHUP
 ]
 
 
@@ -194,11 +200,7 @@ def run_test_suite(test_suite, tc_dir):
 def run_tc(tc_script, tc_dir):
     cmd = f"./{tc_script}"
 
-    try:
-        res = sp.run(cmd, shell=True, cwd=tc_dir, stdout=sp.PIPE, stderr=sp.PIPE, timeout=1)
-    except sp.TimeoutExpired:
-        print(f"Testcase {tc_script} timeout")
-        return -1
+    res = sp.run(cmd, shell=True, cwd=tc_dir, stdout=sp.PIPE, stderr=sp.PIPE) #, timeout=1)
 
     # if res.returncode != 0:
     #     print(f"Testcase {tc_script} failed")

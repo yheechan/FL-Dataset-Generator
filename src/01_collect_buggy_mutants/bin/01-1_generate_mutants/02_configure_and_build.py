@@ -26,7 +26,7 @@ build_sh_wd_key = 'build_script_working_directory'
 configure_no_cov_script = 'configure_no_cov_script.sh'
 configure_yes_cov_script = 'configure_yes_cov_script.sh'
 build_script = 'build_script.sh'
-clean_build_script = 'clean_build_script.sh'
+clean_script = 'clean_script.sh'
 machines_json_file = 'machines.json'
 configure_json_file = 'configurations.json'
 

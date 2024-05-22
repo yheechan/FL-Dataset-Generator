@@ -28,7 +28,7 @@ build_sh_wd_key = 'build_script_working_directory'
 configure_no_cov_script = 'configure_no_cov_script.sh'
 configure_yes_cov_script = 'configure_yes_cov_script.sh'
 build_script = 'build_script.sh'
-clean_build_script = 'clean_build_script.sh'
+clean_script = 'clean_script.sh'
 machines_json_file = 'machines.json'
 configure_json_file = 'configurations.json'
 
@@ -83,8 +83,8 @@ def start_process(subject_name):
     # 5. Show statistics
     show_statistics(subject_working_dir, worksTodo)
 
-    # 6. execute clean_build_script
-    exec_clean_build_script(configs[build_sh_wd_key], subject_working_dir)
+    # 6. execute clean_script
+    exec_clean_script(configs[build_sh_wd_key], subject_working_dir)
 
 
 def initiate_mutants_dir(subject_working_dir, target_files):
@@ -187,11 +187,11 @@ def show_statistics(subject_working_dir, worksTodo):
         print(f'{target_file}: {mutant_cnt}')
 
 
-def exec_clean_build_script(build_sh_wd, subject_working_dir):
-    global clean_build_script
+def exec_clean_script(build_sh_wd, subject_working_dir):
+    global clean_script
 
     build_sh_wd = subject_working_dir / build_sh_wd
-    clean_build_sh = build_sh_wd / clean_build_script
+    clean_build_sh = build_sh_wd / clean_script
     assert clean_build_sh.exists(), f"Clean build script {clean_build_sh} does not exist"
 
     cmd = ['bash', clean_build_sh]
