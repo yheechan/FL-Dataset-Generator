@@ -193,9 +193,19 @@ int main(int argc, char *argv[])
     vector<string> args;
     // args.push_back(argv[2]);
 
+    // edit argv[1] which is a either <file-name>.i or <file-name>.ii
+    // to <file-name>.c in case of .i and <file-name>.cpp in case of .ii
+    string file_name = argv[1];
+    string file_extension = file_name.substr(file_name.find_last_of(".") + 1);
+    if (file_extension == "i") {
+        file_name = file_name.substr(0, file_name.find_last_of(".")) + ".c";
+    } else if (file_extension == "ii") {
+        file_name = file_name.substr(0, file_name.find_last_of(".")) + ".cpp";
+    }
+
     tooling::runToolOnCodeWithArgs(
         make_unique<InsertPublicAction>(),
-        buffer.str(), args, argv[1]
+        buffer.str(), args, file_name
     );
 
     return 0;
