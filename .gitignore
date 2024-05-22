@@ -6,3 +6,4 @@ datasets/
 learn_LIBXML2/
 subjects/
 *-working_directory/
+*.zip

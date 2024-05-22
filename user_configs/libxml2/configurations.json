@@ -18,5 +18,6 @@
         "libxml2/xmlregexp.c",
         "libxml2/xmlschemas.c"
     ],
-    "number_of_mutants_utilized_for_MBFL": 192
+    "number_of_mutants_utilized_for_MBFL": 194,
+    "real_world_bug_versions": true
 }

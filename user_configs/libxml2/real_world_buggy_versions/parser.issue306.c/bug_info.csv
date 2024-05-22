@@ -1,0 +1,2 @@
+target_code_file,bug_code_file,buggy_lineno
+libxml2/parser.c,parser.issue306.c,2320
