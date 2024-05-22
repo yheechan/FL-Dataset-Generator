@@ -138,50 +138,6 @@ def exec_test_mutants(configs, subject_working_dir, machine_cores_list):
 
     # cmd = ['./03-1_test_mutants_on_distributed_machines.sh']
     # print("Distributing subject repository to workers...")
-    # res = sp.call(cmd
-
-def distribute_test_mutant_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list):
-    global bin_dir
-
-    home_directory = configs['home_directory']
-    subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/"
-    machine_bin_dir = base_dir + 'bin/'
-
-    test_mutant_cmd_dir = bin_dir / '01-3_test_mutants'
-    assert test_mutant_cmd_dir.exists(), f"Test mutants directory {test_mutant_cmd_dir} does not exist"
-
-    bash_file = open('04-1_distribute_test_mutants_cmd.sh', 'w')
-    bash_file.write('date\n')
-    cnt = 0
-    laps = 50
-    machine_list = []
-    for machine_core in machine_cores_list:
-        machine_id = machine_core.split(':')[0]
-        core_id = machine_core.split(':')[1]
-
-        if machine_id not in machine_list:
-            machine_list.append(machine_id)
-            cmd = "scp -r {} {}:{} & \n".format(test_mutant_cmd_dir, machine_id, machine_bin_dir)
-            bash_file.write(cmd)
-        
-            cnt += 1
-            if cnt % laps == 0:
-                bash_file.write("sleep 0.2s\n")
-                bash_file.write("wait\n")
-    
-    bash_file.write('echo scp done, waiting...\n')
-    bash_file.write('date\n')
-    bash_file.write('wait\n')
-    bash_file.write('date\n')
-    
-    cmd = ['chmod', '+x', '04-1_distribute_test_mutants_cmd.sh']
-    res = sp.call(cmd)
-
-    # time.sleep(1)
-
-    # cmd = ['./04-1_distribute_test_mutants_cmd.sh']
-    # print("Distributing subject repository to workers...")
     # res = sp.call(cmd)
 
 
