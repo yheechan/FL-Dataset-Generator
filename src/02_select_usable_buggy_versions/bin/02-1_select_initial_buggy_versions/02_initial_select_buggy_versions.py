@@ -10,8 +10,8 @@ import random
 
 # Current working directory
 script_path = Path(__file__).resolve()
-gen_mutants_dir = script_path.parent
-bin_dir = gen_mutants_dir.parent
+select_initial_buggy_versions_dir = script_path.parent
+bin_dir = select_initial_buggy_versions_dir.parent
 select_usable_buggy_versions = bin_dir.parent
 
 # General directories

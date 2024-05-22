@@ -7,8 +7,8 @@ import subprocess as sp
 
 # Current working directory
 script_path = Path(__file__).resolve()
-gen_mutants_dir = script_path.parent
-bin_dir = gen_mutants_dir.parent
+select_initial_buggy_versions_dir = script_path.parent
+bin_dir = select_initial_buggy_versions_dir.parent
 select_usable_buggy_versions_dir = bin_dir.parent
 
 # General directories
@@ -88,7 +88,7 @@ def initialize_working_directory(configs, subject_name):
     build_file_position = working_dir / configs[build_sh_wd_key]
     clean_build_file_position = working_dir / configs[build_sh_wd_key]
 
-    configure_file = new_configure_dir / configure_no_cov_script
+    configure_file = new_configure_dir / configure_yes_cov_script
     assert configure_file.exists(), 'Configure script does not exist'
     build_file = new_configure_dir / build_script
     assert build_file.exists(), 'Build script does not exist'

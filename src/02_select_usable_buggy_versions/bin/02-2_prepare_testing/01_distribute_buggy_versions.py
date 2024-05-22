@@ -9,12 +9,12 @@ import multiprocessing
 
 # Current working directory
 script_path = Path(__file__).resolve()
-gen_mutants_dir = script_path.parent
-bin_dir = gen_mutants_dir.parent
-collect_buggy_mutants_dir = bin_dir.parent
+prepare_testing_dir = script_path.parent
+bin_dir = prepare_testing_dir.parent
+select_usable_buggy_versions = bin_dir.parent
 
 # General directories
-src_dir = collect_buggy_mutants_dir.parent
+src_dir = select_usable_buggy_versions.parent
 root_dir = src_dir.parent
 user_configs_dir = root_dir / 'user_configs'
 subjects_dir = root_dir / 'subjects'
@@ -32,6 +32,7 @@ clean_script = 'clean_script.sh'
 machines_json_file = 'machines.json'
 configure_json_file = 'configurations.json'
 use_distributed_machines = 'use_distributed_machines'
+real_world_buggy_versions = 'real_world_buggy_versions'
 
 def main():
     parser = make_parser()
@@ -42,14 +43,14 @@ def main():
 def start_process(subject_name):
     global configure_json_file
 
-    subject_working_dir = collect_buggy_mutants_dir / f"{subject_name}-working_directory"
+    subject_working_dir = select_usable_buggy_versions / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
     # 1. Read configurations
     configs = read_configs(subject_name, subject_working_dir)
 
     # 2. make a list of buggy_versions: list, path to the buggy versions directory
-    buggy_versions = get_selected_buggy_versions(configs, subject_working_dir)
+    buggy_versions = get_selected_buggy_versions(subject_working_dir)
 
     # 3. get machine-core information
     # machine_cores_list (list): [machine_name:core_id]
@@ -67,7 +68,7 @@ def start_process(subject_name):
 
 
 
-def get_selected_buggy_versions(configs, subject_working_dir):
+def get_selected_buggy_versions(subject_working_dir):
     selected_buggy_versions = subject_working_dir / 'initial_selected_buggy_versions'
 
     buggy_versions = []
@@ -166,7 +167,7 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
     workers_dir = subject_working_dir + 'workers_selecting_buggy_versions/'
 
 
-    bash_file = open('03-1_initiate_directory.sh', 'w')
+    bash_file = open('01-1_initiate_directory.sh', 'w')
     bash_file.write('date\n')
     cnt = 0
     laps = 50
@@ -205,12 +206,12 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
     bash_file.write('wait\n')
     bash_file.write('date\n')
     
-    cmd = ['chmod', '+x', '03-1_initiate_directory.sh']
+    cmd = ['chmod', '+x', '01-1_initiate_directory.sh']
     res = sp.call(cmd)
 
     # time.sleep(1)
 
-    # cmd = ['./03-1_initiate_directory.sh']
+    # cmd = ['./01-1_initiate_directory.sh']
     # print("Initiating directories for distributed machines...")
     # res = sp.call(cmd)
 
@@ -243,7 +244,7 @@ def distribute_buggy_versions_to_workers_distributed_machines(configs, subject_w
     base_dir = f"{home_directory}{subject_name}-select_usable_buggy_versions/{subject_name}-working_directory/workers_selecting_buggy_versions/"
 
 
-    bash_file = open('03-2_distribute_buggy_versions.sh', 'w')
+    bash_file = open('01-2_distribute_buggy_versions.sh', 'w')
     bash_file.write('date\n')
     cnt = 0
     laps = 100
@@ -266,12 +267,12 @@ def distribute_buggy_versions_to_workers_distributed_machines(configs, subject_w
     bash_file.write('wait\n')
     bash_file.write('date\n')
     
-    cmd = ['chmod', '+x', '03-2_distribute_buggy_versions.sh']
+    cmd = ['chmod', '+x', '01-2_distribute_buggy_versions.sh']
     res = sp.call(cmd)
 
     # time.sleep(1)
 
-    # cmd = ['./03-2_distribute_buggy_versions.sh']
+    # cmd = ['./01-2_distribute_buggy_versions.sh']
     # print("Distributing mutants to workers...")
     # res = sp.call(cmd)
 
