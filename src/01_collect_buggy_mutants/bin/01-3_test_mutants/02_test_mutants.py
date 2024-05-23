@@ -4,6 +4,7 @@ from pathlib import Path
 import argparse
 import json
 import subprocess as sp
+import os
 
 # Current working directory
 script_path = Path(__file__).resolve()
@@ -29,6 +30,8 @@ build_script = 'build_script.sh'
 clean_script = 'clean_script.sh'
 machines_json_file = 'machines.json'
 configure_json_file = 'configurations.json'
+
+my_env = os.environ.copy()
 
 
 crash_codes = [
@@ -58,7 +61,7 @@ def start_process(subject_name, worker_name):
     subject_working_dir = collect_buggy_mutants_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
-    core_working_dir = subject_working_dir / 'workers' / worker_name
+    core_working_dir = subject_working_dir / 'workers_testing_mutants' / worker_name
     assert core_working_dir.exists(), f"Core working directory {core_working_dir} does not exist"
 
     # 1. Read configurations
@@ -118,6 +121,18 @@ def get_mutants_list(configs, core_working_dir):
 
 
 def test_mutants(configs, core_working_dir, test_suite, tc_dir, mutants_list):
+    global my_env
+    if configs['environment_setting']['needed'] == True:
+        for key, value in configs['environment_setting']['variables'].items():
+            path = core_working_dir / value
+            assert path.exists(), f"Path {path} does not exist"
+            path_str = path.__str__()
+
+            if key not in my_env:
+                my_env[key] = path_str
+            else:
+                my_env[key] = f"{path_str}:{my_env[key]}"
+            # print(path_str)
 
     for target_file, mutant in mutants_list:
         
@@ -198,10 +213,10 @@ def run_test_suite(test_suite, tc_dir):
     return passing_tcs, failing_tcs
 
 def run_tc(tc_script, tc_dir):
+    global my_env
+
     cmd = f"./{tc_script}"
-
-    res = sp.run(cmd, shell=True, cwd=tc_dir, stdout=sp.PIPE, stderr=sp.PIPE) #, timeout=1)
-
+    res = sp.run(cmd, shell=True, cwd=tc_dir, stdout=sp.PIPE, stderr=sp.PIPE, env=my_env) #, timeout=1)
     # if res.returncode != 0:
     #     print(f"Testcase {tc_script} failed")
     #     print(f"cmd: {cmd}")

@@ -148,7 +148,8 @@ def distribute_config_dir(configs, subject_working_dir, machine_cores_list):
 def distribute_config_dir_distributed_machines(configs, subject_working_dir, machine_cores_list):
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/{subject_name}-working_directory/"
+    base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/"
+    machine_subject_working_dir = base_dir + f"{subject_name}-working_directory/"
 
     config_dir = subject_working_dir / f"{subject_name}-configures"
     assert config_dir.exists(), f"Subject repository {config_dir} does not exist"
@@ -164,7 +165,7 @@ def distribute_config_dir_distributed_machines(configs, subject_working_dir, mac
 
         if machine_id not in machine_list:
             machine_list.append(machine_id)
-            cmd = "scp -r {} {}:{} & \n".format(config_dir, machine_id, base_dir)
+            cmd = "scp -r {} {}:{} & \n".format(config_dir, machine_id, machine_subject_working_dir)
             bash_file.write(cmd)
         
             cnt += 1

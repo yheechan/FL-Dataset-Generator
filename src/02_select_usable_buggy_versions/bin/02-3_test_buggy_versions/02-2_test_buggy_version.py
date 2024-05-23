@@ -4,6 +4,7 @@ from pathlib import Path
 import argparse
 import json
 import subprocess as sp
+import os
 
 # Current working directory
 script_path = Path(__file__).resolve()
@@ -30,6 +31,8 @@ clean_script = 'clean_script.sh'
 machines_json_file = 'machines.json'
 configure_json_file = 'configurations.json'
 real_world_buggy_versions = 'real_world_buggy_versions'
+
+my_env = os.environ.copy()
 
 
 crash_codes = [
@@ -146,7 +149,8 @@ def test_buggy_version(
         configs, core_working_dir, version_name, 
         target_code_file_path, buggy_code_file, 
         buggy_lineno, failing_tc_list, version_dir):
-    
+    global my_env
+
     # --- prepare needed directories
     # gcov executable
     home_directory = configs['home_directory']
@@ -184,6 +188,21 @@ def test_buggy_version(
         gcda_file = '*'+filename+'.gcda'
         target_gcno_gcda.append(gcno_file)
         target_gcno_gcda.append(gcda_file)
+    
+    # my_env["PATH"] = f"/usr/sbin:/sbin:{my_env['PATH']}
+
+    global my_env
+    if configs['environment_setting']['needed'] == True:
+        for key, value in configs['environment_setting']['variables'].items():
+            path = core_working_dir / value
+            assert path.exists(), f"Path {path} does not exist"
+            path_str = path.__str__()
+
+            if key not in my_env:
+                my_env[key] = path_str
+            else:
+                my_env[key] = f"{path_str}:{my_env[key]}"
+            # print(path_str)
 
     # --- test the buggy version
     # 1. Make patch file
@@ -191,6 +210,9 @@ def test_buggy_version(
 
     # 2. Apply patch
     apply_patch(target_code_file_path, buggy_code_file, patch_file, core_working_dir, False)
+
+    # THIS STEP IS NEEDED OR ELSE COVERAGE IS NOT MEASURED PROPERLY... (I THINK)
+    # remove_all_gcda_gcno(subject_dir)
 
     # 3. Build the subject, if build fails, skip the mutant
     res = execute_build_script(configs[build_sh_wd_key], core_working_dir)
@@ -208,7 +230,7 @@ def test_buggy_version(
         # 4-2. run the test case
         res = run_tc(tc_name, tc_dir)
         if res == 0:
-            print(f"Testcase {tc_name} passed")
+            print(f"Testcase {tc_name} passed print myenv")
             apply_patch(target_code_file_path, buggy_code_file, patch_file, core_working_dir, True)
             exit(1)
         
@@ -321,10 +343,10 @@ def remove_all_gcda(subject_dir):
 
 
 def run_tc(tc_script, tc_dir):
+    global my_env
+
     cmd = f"./{tc_script}"
-
-    res = sp.run(cmd, shell=True, cwd=tc_dir, stdout=sp.PIPE, stderr=sp.PIPE) #, timeout=1)
-
+    res = sp.run(cmd, shell=True, cwd=tc_dir, stdout=sp.PIPE, stderr=sp.PIPE, env=my_env) #, timeout=1)
     # if res.returncode != 0:
     #     print(f"Testcase {tc_script} failed")
     #     print(f"cmd: {cmd}")
@@ -334,43 +356,6 @@ def run_tc(tc_script, tc_dir):
 
     # print(f"tc_script: {tc_script}, returncode: {res.returncode}")
     return res.returncode
-
-
-def test_mutants(configs, core_working_dir, test_suite, tc_dir, mutants_list):
-
-    for target_file, mutant in mutants_list:
-        
-        # 1. Make patch file
-        patch_file = make_patch_file(target_file, mutant, core_working_dir)
-
-        # 2. Apply patch
-        apply_patch(target_file, mutant, patch_file, core_working_dir, False)
-
-        # 3. Build the subject, if build fails, skip the mutant
-        res = execute_build_script(configs[build_sh_wd_key], core_working_dir)
-        if res != 0:
-            print('Failed to build on {}'.format(mutant.name))
-            apply_patch(target_file, mutant, patch_file, core_working_dir, True)
-            continue
-
-        # 4. run the test suite
-        passing_tcs, failing_tcs = run_test_suite(test_suite, tc_dir)
-        if passing_tcs == [-1] and failing_tcs == [-1]:
-            print('Crash detected on {}'.format(mutant.name))
-            apply_patch(target_file, mutant, patch_file, core_working_dir, True)
-            continue
-
-        # 5. Don't save the mutant if all test cases pass
-        if len(failing_tcs) == 0:
-            print(f"Mutant {mutant.name} is not killed")
-            apply_patch(target_file, mutant, patch_file, core_working_dir, True)
-            continue
-
-        # 6. Save the mutant if any test case fails
-        save_buggy_mutant(target_file, mutant, passing_tcs, failing_tcs, core_working_dir)
-
-        # X. Apply patch reverse
-        apply_patch(target_file, mutant, patch_file, core_working_dir, True)
 
 
 def make_patch_file(target_code_file_path, buggy_code_file, core_working_dir):
@@ -400,60 +385,6 @@ def apply_patch(target_code_file_path, buggy_code_file, patch_file, core_working
     print(f'Applied patch to {target_file.name} with mutant {buggy_code_file.name} : revert={revert}')
 
 
-def run_test_suite(test_suite, tc_dir):
-    passing_tcs = []
-    failing_tcs = []
-
-    for tc_script in test_suite:
-        res = run_tc(tc_script, tc_dir)
-        if res in crash_codes:
-            return [-1], [-1]
-        elif res == 0:
-            passing_tcs.append(tc_script)
-        else:
-            failing_tcs.append(tc_script)
-    
-    print(f'Passing: {len(passing_tcs)}, Failing: {len(failing_tcs)}')
-    return passing_tcs, failing_tcs
-
-def run_tc(tc_script, tc_dir):
-    cmd = f"./{tc_script}"
-
-    res = sp.run(cmd, shell=True, cwd=tc_dir, stdout=sp.PIPE, stderr=sp.PIPE) #, timeout=1)
-
-    # if res.returncode != 0:
-    #     print(f"Testcase {tc_script} failed")
-    #     print(f"cmd: {cmd}")
-    #     print(f"stdout: {res.stdout}")
-    #     print(f"stderr: {res.stderr}")
-    #     print(f"returncode: {res.returncode}")
-
-    # print(f"tc_script: {tc_script}, returncode: {res.returncode}")
-    return res.returncode
-
-def save_buggy_mutant(target_file, mutant, passing_tcs, failing_tcs, core_working_dir):
-    buggy_mutant_dir = core_working_dir / 'buggy_mutants'
-    assert buggy_mutant_dir.exists(), f"Buggy mutants directory {buggy_mutant_dir} does not exist"
-
-    # save the mutant
-    mutant_dir = buggy_mutant_dir / mutant.name
-    assert not mutant_dir.exists(), f"Mutant directory {mutant_dir} already exists"
-    mutant_dir.mkdir(exist_ok=True)
-
-    # save the failing tcs
-    failing_tcs_file = mutant_dir / 'failing_tcs.txt'
-    failing_tcs_file.write_text('\n'.join(failing_tcs))
-
-    # save the passing tcs
-    passing_tcs_file = mutant_dir / 'passing_tcs.txt'
-    passing_tcs_file.write_text('\n'.join(passing_tcs))
-
-    # save the string of targetfile and mutant name as csv
-    csv_file = mutant_dir / 'bug_info.csv'
-    csv_file.write_text(f"target_code_file,mutant_code_file\n{target_file},{mutant.name}")
-
-    print(f"Mutant {mutant.name} is saved")
-
 
 def execute_build_script(build_sh_wd, core_working_dir):
     global build_script
@@ -464,6 +395,8 @@ def execute_build_script(build_sh_wd, core_working_dir):
 
     cmd = ['bash', build_script]
     res = sp.run(cmd, cwd=build_sh_wd, stdout=sp.PIPE, stderr=sp.PIPE)
+
+    print(f"Build script executed: {res.returncode}")
     
     return res.returncode
 

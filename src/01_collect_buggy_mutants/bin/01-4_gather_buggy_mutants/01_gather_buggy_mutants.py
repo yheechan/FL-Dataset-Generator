@@ -74,7 +74,9 @@ def retrieve_buggy_mutants(configs, subject_working_dir, buggy_mutant_dir, machi
 def retrieve_buggy_mutants_distributed_machines(configs, subject_working_dir, buggy_mutant_dir, machine_cores_list):
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
-    workers = f"{home_directory}{subject_name}-collect_buggy_mutants/{subject_name}-working_directory/workers/"
+    base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/"
+    subject_working_dir = base_dir + f"{subject_name}-working_directory/"
+    workers = subject_working_dir + "workers_testing_mutants/"
 
     bash_file = open('01-1_retrieve_buggy_mutants.sh', 'w')
     bash_file.write('date\n')
@@ -109,7 +111,7 @@ def retrieve_buggy_mutants_distributed_machines(configs, subject_working_dir, bu
 
 
 def retrieve_buggy_mutants_single_machine(configs, subject_working_dir, buggy_mutant_dir, machine_cores_list):
-    workers_dir = subject_working_dir / 'workers'
+    workers_dir = subject_working_dir / 'workers_testing_mutants'
 
     for machine_core in machine_cores_list:
         machine_id = machine_core.split(':')[0]

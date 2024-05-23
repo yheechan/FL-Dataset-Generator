@@ -150,7 +150,9 @@ def distribute_subject_repo(configs, subject_working_dir, machine_cores_list):
 def distribute_subject_repo_distributed_machines(configs, subject_working_dir, machine_cores_list):
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/{subject_name}-working_directory/workers/"
+    base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/"
+    machine_subject_working_dir = base_dir + f"{subject_name}-working_directory/"
+    workers_dir = machine_subject_working_dir + 'workers_testing_mutants/'
 
     subject_repo = subject_working_dir / subject_name
     assert subject_repo.exists(), f"Subject repository {subject_repo} does not exist"
@@ -162,7 +164,7 @@ def distribute_subject_repo_distributed_machines(configs, subject_working_dir, m
     for machine_core in machine_cores_list:
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
-        machine_core_dir = f"{base_dir}{machine_id}/{core_id}/"
+        machine_core_dir = f"{workers_dir}{machine_id}/{core_id}/"
 
         cmd = 'scp -r {} {}:{} & \n'.format(subject_repo, machine_id, machine_core_dir)
         bash_file.write(f"{cmd}")
@@ -187,7 +189,7 @@ def distribute_subject_repo_distributed_machines(configs, subject_working_dir, m
     # res = sp.call(cmd)
 
 def distribute_subject_repo_single_machine(configs, subject_working_dir, machine_cores_list):
-    workers_dir = subject_working_dir / 'workers'
+    workers_dir = subject_working_dir / 'workers_testing_mutants'
 
     subject_repo = subject_working_dir / configs['subject_name']
     assert subject_repo.exists(), f"Subject repository {subject_repo} does not exist"

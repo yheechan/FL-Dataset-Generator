@@ -178,7 +178,7 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
     subject_name = configs['subject_name']
     base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/"
     subject_working_dir = base_dir + f"{subject_name}-working_directory/"
-    workers_dir = subject_working_dir + 'workers/'
+    workers_dir = subject_working_dir + 'workers_testing_mutants/'
 
 
     bash_file = open('01-1_initiate_directory.sh', 'w')
@@ -234,7 +234,7 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
 
 def initialize_directories_single_machine(configs, subject_working_dir, distribution_machineCore2mutantList):
 
-    workers_dir = subject_working_dir / 'workers'
+    workers_dir = subject_working_dir / 'workers_testing_mutants'
     workers_dir.mkdir(exist_ok=True)
 
     for machine_core, mutants in distribution_machineCore2mutantList.items():
@@ -265,7 +265,7 @@ def distribute_mutants_to_workers(configs, subject_working_dir, distribution_mac
 def distribute_mutants_to_workers_distributed_machines(configs, subject_working_dir, distribution_machineCore2mutantList):
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/{subject_name}-working_directory/workers/"
+    base_dir = f"{home_directory}{subject_name}-collect_buggy_mutants/{subject_name}-working_directory/workers_testing_mutants/"
 
     bash_file = open('01-2_distribute_mutants.sh', 'w')
     bash_file.write('date\n')
@@ -302,7 +302,7 @@ def distribute_mutants_to_workers_distributed_machines(configs, subject_working_
 
 
 def distribute_mutants_to_workers_single_machine(configs, subject_working_dir, distribution_machineCore2mutantList):
-    workers_dir = subject_working_dir / 'workers'
+    workers_dir = subject_working_dir / 'workers_testing_mutants'
 
     for machine_core, mutants in distribution_machineCore2mutantList.items():
         machine_id = machine_core.split(':')[0]

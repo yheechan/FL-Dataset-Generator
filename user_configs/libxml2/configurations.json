@@ -18,5 +18,11 @@
         "libxml2/xmlregexp.c",
         "libxml2/xmlschemas.c"
     ],
-    "real_world_buggy_versions": true
+    "real_world_buggy_versions": true,
+    "environment_setting": {
+        "needed": true,
+        "variables": {
+            "LD_LIBRARY_PATH": "libxml2/.libs"
+        }
+    }
 }
