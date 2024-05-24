@@ -1,10 +1,10 @@
 patch_files/
 extra_test_input_files/
 .vscode/
-working_directory/
 datasets/
 learn_LIBXML2/
 subjects/
 *-working_directory/
 *.zip
 libxml2/
+02-5_analyze_buggy_versions/

@@ -1,0 +1,75 @@
+{
+    "branch_covered": 322,
+    "branch_percent": 1.2,
+    "branch_total": 25788,
+    "files": [
+        {
+            "branch_covered": 0,
+            "branch_percent": 0.0,
+            "branch_total": 2650,
+            "filename": "HTMLparser.c",
+            "function_covered": 0,
+            "function_percent": 0.0,
+            "function_total": 96,
+            "line_covered": 0,
+            "line_percent": 0.0,
+            "line_total": 2992
+        },
+        {
+            "branch_covered": 312,
+            "branch_percent": 4.6,
+            "branch_total": 6847,
+            "filename": "parser.c",
+            "function_covered": 34,
+            "function_percent": 18.0,
+            "function_total": 189,
+            "line_covered": 596,
+            "line_percent": 7.8,
+            "line_total": 7675
+        },
+        {
+            "branch_covered": 9,
+            "branch_percent": 0.2,
+            "branch_total": 4197,
+            "filename": "relaxng.c",
+            "function_covered": 2,
+            "function_percent": 1.4,
+            "function_total": 145,
+            "line_covered": 29,
+            "line_percent": 0.5,
+            "line_total": 6110
+        },
+        {
+            "branch_covered": 0,
+            "branch_percent": 0.0,
+            "branch_total": 2511,
+            "filename": "xmlregexp.c",
+            "function_covered": 0,
+            "function_percent": 0.0,
+            "function_total": 98,
+            "line_covered": 0,
+            "line_percent": 0.0,
+            "line_total": 3436
+        },
+        {
+            "branch_covered": 1,
+            "branch_percent": 0.0,
+            "branch_total": 9583,
+            "filename": "xmlschemas.c",
+            "function_covered": 1,
+            "function_percent": 0.3,
+            "function_total": 389,
+            "line_covered": 6,
+            "line_percent": 0.0,
+            "line_total": 13014
+        }
+    ],
+    "function_covered": 37,
+    "function_percent": 4.0,
+    "function_total": 917,
+    "gcovr/summary_format_version": "0.5",
+    "line_covered": 631,
+    "line_percent": 1.9,
+    "line_total": 33227,
+    "root": "../libxml2"
+}
