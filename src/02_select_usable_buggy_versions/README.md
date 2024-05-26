@@ -66,3 +66,32 @@ $ ./03-1_test_buggy_versions_on_distributed_machines.sh
 $ ./01_gather_buggy_mutants.py --subject libxml2
 ```
 
+
+## 02-4 Gather buggy versions
+* Command to run gathering buggy version to one directory
+```
+$ ./01_gather_buggy_versions.py --subject libxml2
+```
+
+
+## 02-5 analyze_buggy_versions (optional)
+This directory contains executable to analyze statistics of test cases & reduce # of TCs in the test suite.
+
+* 1. Analyze TCs statistics of each version in buggy versions set
+    * where:
+        * ``<subject-name>``: is the name of the target subject
+        * ``<dir-name>``: is the directory name that contains the target buggy versions
+        * ``csv-filename>``: is the csv file to save statistics of TCs per buggy version
+```
+$ ./01_testsuite_statistics.py --subject <subject-name> --versions-set-name <dir-name> --output-csv <csv-filename>
+```
+
+* 2. form a file of reduced & excluded TCs in a text file
+    * where:
+        * ``<subject-name>``: is the name of the target subject
+        * ``<dir-name>``: is the directory name that contains the target buggy versions
+        * ``<num>``: is the target number in which the testsuite is reduced to
+    * This step saves the set of buggy versions with reduced test suite size within ``<dir-name>-reduced/`` directory.
+```
+./02_form_reduced_testsuite --subject <subject-name> --versions-set-name <dir-name> --testsuite-size <num>
+```
