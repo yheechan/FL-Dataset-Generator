@@ -6,7 +6,7 @@
     "compile_command_path": "libxml2/compile_commands.json",
     "test_case_directory": "libxml2/testcases/",
     "subject_language": "C",
-    "use_distributed_machines": true,
+    "use_distributed_machines": false,
     "single_machine": {
         "machine_name": "gaster23.swtv",
         "machine_cores": 32

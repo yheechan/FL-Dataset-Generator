@@ -1,0 +1,59 @@
+#!/usr/bin/python3
+
+import subprocess as sp
+import argparse
+
+
+initialize_working_directory = '01_initialize_working_directory.py'
+distribute_buggy_versions = '02_distribute_buggy_versions.py'
+distribute_repo = '03_distribute_repo.py'
+distribute_config = '04_distribute_config.py'
+distribute_prepare_prerequisites_cmd = '05_distribute_prepare_prerequisites_cmd.py'
+
+def main():
+    parser = make_parser()
+    args = parser.parse_args()
+    start_process(args.subject, args.buggy_versions_set)
+
+def start_process(subject_name, buggy_versions_set):
+    
+    # 1. initialize working directory
+    cmd = ['python3', initialize_working_directory, '--subject', subject_name]
+    res = sp.run(cmd)
+    if res.returncode != 0:
+        raise Exception('Failed to execute initialize working directory script')
+    
+    # 2. distribute buggy versions
+    cmd = ['python3', distribute_buggy_versions, '--subject', subject_name, '--buggy-versions-set', buggy_versions_set]
+    res = sp.run(cmd)
+    if res.returncode != 0:
+        raise Exception('Failed to execute distribute buggy versions script')
+    
+    # 3. distribute subject repository
+    cmd = ['python3', distribute_repo, '--subject', subject_name]
+    res = sp.run(cmd)
+    if res.returncode != 0:
+        raise Exception('Failed to execute distribute subject repository script')
+    
+    # 4. distribute config directory
+    cmd = ['python3', distribute_config, '--subject', subject_name]
+    res = sp.run(cmd)
+    if res.returncode != 0:
+        raise Exception('Failed to execute distribute config directory script')
+    
+    # 5. distribute prepare prerequisites command
+    cmd = ['python3', distribute_prepare_prerequisites_cmd, '--subject', subject_name]
+    res = sp.run(cmd)
+    if res.returncode != 0:
+        raise Exception('Failed to execute distribute prepare prerequisites command script')
+
+
+def make_parser():
+    parser = argparse.ArgumentParser(description='Copy subject to working directory')
+    parser.add_argument('--subject', type=str, help='Subject name', required=True)
+    parser.add_argument('--buggy-versions-set', type=str, help='Buggy versions set', required=True)
+    return parser
+
+
+if __name__ == "__main__":
+    main()
