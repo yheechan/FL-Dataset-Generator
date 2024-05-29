@@ -13,10 +13,11 @@ void GenerateRandomNumbers(set<int> &s, int desired_size, int cap)
 }
 
 MutantDatabase::MutantDatabase(clang::CompilerInstance *comp_inst, 
-               std::string input_filename, std::string output_dir, int limit_pos, int limit_line)
+               std::string input_filename, std::string output_dir,
+               int limit_pos, int limit_line, vector<int> include_list)
 : comp_inst_(comp_inst), input_filename_(input_filename),
 output_dir_(output_dir), next_mutantfile_id_(1), num_mutant_limit_on_pos_(limit_pos),
-num_mutant_limit_on_line_(limit_line),
+num_mutant_limit_on_line_(limit_line), include_list_(include_list),
 src_mgr_(comp_inst->getSourceManager()), lang_opts_(comp_inst->getLangOpts())
 {
   // set database filename with output directory prepended
@@ -400,6 +401,12 @@ void MutantDatabase::ExportAllEntries()
       vector<pair<MutantName, MutantEntry>> line_entries;
       map<MutantName, int> line_mutant_count;
 
+      // if include_list_ contains atleast one element then only include those mutations
+      if (include_list_.size() > 0) {
+        if (find(include_list_.begin(), include_list_.end(), line_map_iter.first) == include_list_.end())
+          continue;
+      }
+
 
       for (auto column_map_iter: line_map_iter.second) {
         for (auto mutantname_map_iter: column_map_iter.second) {
@@ -424,6 +431,7 @@ void MutantDatabase::ExportAllEntries()
           mutant_count[entry.first] += 1;
         }
       } else {
+        // WHEN NUMBER OF MUTANTS ON A LINE IS GREATER THAN THE GIVEN LIMIT
         set<int> rand_entries;
         GenerateRandomNumbers(rand_entries, num_mutant_limit_on_line_,
                         static_cast<int>(line_entries.size()));
@@ -439,6 +447,12 @@ void MutantDatabase::ExportAllEntries()
     }
   } else {
     for (auto line_map_iter: mutant_entry_table_) {
+      // if include_list_ contains atleast one element then only include those mutations
+      if (include_list_.size() > 0) {
+        if (find(include_list_.begin(), include_list_.end(), line_map_iter.first) == include_list_.end())
+          continue;
+      }
+      
       for (auto column_map_iter: line_map_iter.second) {
         for (auto mutantname_map_iter: column_map_iter.second)
         {

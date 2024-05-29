@@ -127,6 +127,13 @@ Default is null so all lines in target file are subject to mutation.
 
 -x is prioritized over -rs and -re. A line specified by -x option will be excluded even if it is in mutation range.
 
+### -i option
+Usage:
+```
+-x <line1>[,<line2>,...]
+```
+Used to specify the lines which will be mutated (Use when mutating a single file).
+
 ### -m option
 
 Usage:

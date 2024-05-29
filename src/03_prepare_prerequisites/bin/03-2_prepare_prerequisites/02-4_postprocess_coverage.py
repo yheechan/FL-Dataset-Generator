@@ -315,15 +315,6 @@ def get_bug_info(version_dir):
         target_code_file, buggy_code_filename, buggy_lineno = lines[1].strip().split(',')
         return target_code_file, buggy_code_filename, buggy_lineno
 
-def get_buggy_code_file(version_dir, buggy_code_filename):
-    buggy_code_file_dir = version_dir / 'buggy_code_file'
-    assert buggy_code_file_dir.exists(), f"Buggy code file directory {buggy_code_file_dir} does not exist"
-
-    buggy_code_file = buggy_code_file_dir / buggy_code_filename
-    assert buggy_code_file.exists(), f"Buggy code file {buggy_code_file} does not exist"
-
-    return buggy_code_file
-
 def custome_sort(tc_script):
     tc_filename = tc_script.split('.')[0]
     return int(tc_filename[2:])

@@ -100,29 +100,6 @@ def get_buggy_code_file(version_dir, buggy_code_filename):
     return buggy_code_file
 
 
-def custome_sort(tc_script):
-    tc_filename = tc_script.split('.')[0]
-    return int(tc_filename[2:])
-
-def get_tcs(version_dir, tc_file):
-    testsuite_info_dir = version_dir / 'testsuite_info'
-    assert testsuite_info_dir.exists(), f"Testsuite info directory {testsuite_info_dir} does not exist"
-
-    tc_file_txt = testsuite_info_dir / tc_file
-    assert tc_file_txt.exists(), f"Failing test cases file {tc_file_txt} does not exist"
-
-    tcs_list = []
-
-    with open(tc_file_txt, 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            line = line.strip()
-            tcs_list.append(line)
-        
-    tcs_list = sorted(tcs_list, key=custome_sort)
-
-    return tcs_list
-
 
 
 

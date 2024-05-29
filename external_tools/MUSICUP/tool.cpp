@@ -593,6 +593,11 @@ static llvm::cl::opt<unsigned int> OptionL(
 mutation point & mutation operator"), 
     llvm::cl::value_desc("maxnum"),
     llvm::cl::init(UINT_MAX), llvm::cl::cat(MusicOptions));
+  
+static llvm::cl::list<string> OptionI(
+    "i", llvm::cl::desc("Specify mutant operator index to use"), 
+    llvm::cl::value_desc("index1,index2,...,indexN"),
+    llvm::cl::cat(MusicOptions));
 
 static llvm::cl::list<string> OptionRS(
     "rs",
@@ -627,6 +632,7 @@ vector<ExprMutantOperator*> g_expr_mutant_operator_list;
 vector<StmtMutantOperator*> g_stmt_mutant_operator_list;
 map<string, vector<int>> g_rs_list;
 map<string, vector<int>> g_re_list;
+vector<int> i_list;
 //llvm::Expected<clang::tooling::CommonOptionsParser> &g_option_parser;
 
 // default output directory is current directory.
@@ -646,6 +652,36 @@ SourceLocation g_mutation_range_end;
   struct stat buffer;   
   return (stat (name.c_str(), &buffer) == 0); 
 }*/
+
+void ParseOptionI()
+{
+  // Parse option -i (if provided)
+  // -i 1,3,4,5,6
+  // add the numbers to i_list 
+  if (OptionI.empty())
+    return;
+
+  vector<string> temp;
+  SplitStringIntoVector(OptionI[0], temp, string(","));
+  for (auto e: temp)
+  {
+    if (!IsAllDigits(e))
+    {
+      cout << "Invalid input for -i option, must be a list of positive integers\n";
+      cout << "Usage: -i <num1>,<num2>,...,<numN>\n";
+      exit(1);
+    }
+
+    int num;
+    stringstream(e) >> num;
+    i_list.push_back(num);
+  }
+
+  cout << "done with option i: ";
+  for (auto e: i_list)
+    cout << e << " ";
+  cout << "\n";
+}
 
 void ParseOptionRS()
 {
@@ -1115,7 +1151,7 @@ public:
 
     g_mutant_database = new MutantDatabase(
         &CI, g_config->getInputFilename(),
-        g_config->getOutputDir(), g_limit, l_limit);
+        g_config->getOutputDir(), g_limit, l_limit, i_list);
 
     g_music_context = new MusicContext(
         &CI, g_config, g_gatherer->getLabelToGotoListMap(),
@@ -1193,6 +1229,7 @@ int main(int argc, const char *argv[])
   // Randomization for option -l.
   srand (time(NULL));
 
+  ParseOptionI();
   ParseOptionRS();
   ParseOptionRE();
   ParseOptionO();
