@@ -11,10 +11,10 @@ import multiprocessing
 script_path = Path(__file__).resolve()
 initialization_dir = script_path.parent
 bin_dir = initialization_dir.parent
-prepare_prerequisites = bin_dir.parent
+mbfl_feature_extraction_dir = bin_dir.parent
 
 # General directories
-src_dir = prepare_prerequisites.parent
+src_dir = mbfl_feature_extraction_dir.parent
 root_dir = src_dir.parent
 user_configs_dir = root_dir / 'user_configs'
 subjects_dir = root_dir / 'subjects'
@@ -41,20 +41,45 @@ def main():
 
 
 def start_process(subject_name):
-    global configure_json_file
+    global configure_json_file, mbfl_feature_extraction_dir
 
-    subject_working_dir = prepare_prerequisites / f"{subject_name}-working_directory"
+    subject_working_dir = mbfl_feature_extraction_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
     # 1. Read configurations
     configs = read_configs(subject_name, subject_working_dir)
 
+    # 2. make a list of buggy_versions: list, path to the buggy versions directory
+    buggy_versions = get_buggy_versions(subject_name)
+
     # 2. get machine-core information
     # machine_cores_list (list): [machine_name:core_id]
     machine_cores_list = get_machine_cores_list(configs, subject_working_dir)
 
-    # 3. distribute config directory to each machine-core
-    distribute_external_tools(configs, subject_working_dir, machine_cores_list)
+    # # 4. distribute bugs to machine-cores equally
+    # # distribution_machineCore2bugsList (dict): {machine_name:core_id: [buggy_version_dir_list]}
+    distribution_machineCore2bugsList = assign_buggy_versions(configs, subject_working_dir, buggy_versions, machine_cores_list)
+
+    # 3. distribute subject repository to each machine-core
+    distribute_subject_repo(configs, subject_working_dir, distribution_machineCore2bugsList)
+
+def get_buggy_versions(subject_name):
+    global src_dir
+    
+    # copy usable buggy versions directory to working directory
+    prepare_prerequisites_dir = src_dir / '03_prepare_prerequisites'
+    subject_working_dir = prepare_prerequisites_dir / f'{subject_name}-working_directory'
+    buggy_versions_dir = subject_working_dir / 'prerequisite_data'
+    assert buggy_versions_dir.exists(), 'Buggy versions directory does not exist'
+
+    buggy_versions = []
+    for bug_version_dir in buggy_versions_dir.iterdir():
+        buggy_versions.append(bug_version_dir)
+    
+    print(f"Total buggy versions: {len(buggy_versions)}")
+
+    return buggy_versions
+
 
 
 def get_machine_cores_list(configs, subject_working_dir):
@@ -107,57 +132,94 @@ def get_from_local_machine(configs):
     
     return machine_cores_list
 
+def assign_buggy_versions(configs, subject_working_dir, buggy_versions, machine_cores_list):
 
-def distribute_external_tools(configs, subject_working_dir, machine_cores_list):
+    # equally distribute the bugs in buggy_verisons_list to machine_cores_list
+    distribution_machineCore2bugsList = {}
+    for idx, buggy_version_dir in enumerate(buggy_versions):
+        machine_core = machine_cores_list[idx % len(machine_cores_list)]
+
+        if machine_core not in distribution_machineCore2bugsList:
+            distribution_machineCore2bugsList[machine_core] = []
+        
+        distribution_machineCore2bugsList[machine_core].append(buggy_version_dir)
+    
+    print(f"Buggy versions are assigned to {len(distribution_machineCore2bugsList)} machine-cores")
+    # for machine_core, mutants in distribution_machineCore2bugsList.items():
+    #     print(f"{machine_core}: {len(mutants)}")
+    
+    return distribution_machineCore2bugsList
+
+
+def distribute_subject_repo(configs, subject_working_dir, distribution_machineCore2bugsList):
     global use_distributed_machines
 
     if configs[use_distributed_machines] == True:
-        distribute_external_tools_distributed_machines(configs, subject_working_dir, machine_cores_list)
+        distribute_subject_repo_distributed_machines(configs, subject_working_dir, distribution_machineCore2bugsList)
+    else:
+        distribute_subject_repo_single_machine(configs, subject_working_dir, distribution_machineCore2bugsList)
 
 
-def distribute_external_tools_distributed_machines(configs, subject_working_dir, machine_cores_list):
+def distribute_subject_repo_distributed_machines(configs, subject_working_dir, distribution_machineCore2bugsList):
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-prepare_prerequisites/"
+    base_dir = f"{home_directory}{subject_name}-mbfl_feature_extraction/"
     machine_subject_working_dir = base_dir + f"{subject_name}-working_directory/"
+    workers_dir = machine_subject_working_dir + 'workers_extracting_mbfl_features/'
 
     # item being sent
-    ext_tool_dir = subject_working_dir / "external_tools"
-    assert ext_tool_dir.exists(), f"Subject repository {ext_tool_dir} does not exist"
+    subject_repo = subject_working_dir / subject_name
+    assert subject_repo.exists(), f"Subject repository {subject_repo} does not exist"
 
-    bash_file = open('06-1_distribute_external_tools.sh', 'w')
+    bash_file = open('03-1_distribute_repo.sh', 'w')
     bash_file.write('date\n')
     cnt = 0
     laps = 50
-    machine_list = []
-    for machine_core in machine_cores_list:
+    for machine_core, buggy_versions_list in distribution_machineCore2bugsList.items():
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
+        machine_core_dir = f"{workers_dir}{machine_id}/{core_id}/"
 
-        if machine_id not in machine_list:
-            machine_list.append(machine_id)
-            cmd = "scp -r {} {}:{} & \n".format(ext_tool_dir, machine_id, machine_subject_working_dir)
-            bash_file.write(cmd)
+        cmd = 'scp -r {} {}:{} & \n'.format(subject_repo, machine_id, machine_core_dir)
+        bash_file.write(f"{cmd}")
         
-            cnt += 1
-            if cnt % laps == 0:
-                bash_file.write("sleep 0.2s\n")
-                bash_file.write("wait\n")
+        cnt += 1
+        if cnt % laps == 0:
+            bash_file.write("sleep 0.2s\n")
+            bash_file.write("wait\n")
     
     bash_file.write('echo scp done, waiting...\n')
     bash_file.write('date\n')
     bash_file.write('wait\n')
     bash_file.write('date\n')
     
-    cmd = ['chmod', '+x', '06-1_distribute_external_tools.sh']
+    cmd = ['chmod', '+x', '03-1_distribute_repo.sh']
     res = sp.call(cmd)
 
     # time.sleep(1)
 
-    # cmd = ['./06-1_distribute_external_tools.sh']
+    # cmd = ['./03-1_distribute_repo.sh']
     # print("Distributing subject repository to workers...")
     # res = sp.call(cmd)
 
+def distribute_subject_repo_single_machine(configs, subject_working_dir, distribution_machineCore2bugsList):
+    workers_dir = subject_working_dir / 'workers_extracting_mbfl_features'
+
+    subject_repo = subject_working_dir / configs['subject_name']
+    assert subject_repo.exists(), f"Subject repository {subject_repo} does not exist"
+
+    for machine_core, buggy_versions_list in distribution_machineCore2bugsList.items():
+        machine_id = machine_core.split(':')[0]
+        core_id = machine_core.split(':')[1]
+        machine_core_dir = workers_dir / f"{machine_id}/{core_id}/"
+
+        if not machine_core_dir.exists():
+            continue
+
+        cmd = ['cp', '-r', subject_repo, machine_core_dir]
+        res = sp.call(cmd)
+
+    print("Distributed subject repository to workers")
 
 
 def make_parser():

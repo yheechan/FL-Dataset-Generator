@@ -10,3 +10,31 @@ Specific steps:
     * Take into account of the outcome of each test case (p2p, f2f, p2f, f2p)
 6. Measure the mbfl features.
 
+
+## 04-1 Initialization stage for mbfl feature extraction
+Initializes directories and distributed buggy versions (w/ prerequisite data)
+1. Initialization of working directory: ``<subject-name>-working_directory/``
+2. Assign/Distribute buggy versions (w/ prerequisite data)
+3. Distribute subject repository
+4. Distribute user configurations
+5. Distribute command directory for preparing prerequisites
+6. Distribute external tools specifically ``music`` to extract line2function information.
+
+### Usage with single machine
+* where:
+    * ``<subject-name>``: is the name of the target subject
+```
+$ ./general_command --subject <subject-name>
+```
+
+
+### Usage with multiple distribute machines
+```
+$ ./general_command.py --subject libxml2
+$ ./02-1_initiate_directory.sh
+$ ./02-2_distribute_buggy_versions.sh
+$ ./03-1_distribute_repo.sh
+$ ./04-1_distribute_config.sh
+$ ./05-1_distribute_prepare_prerequisites_cmd.sh
+$ ./06-1_distribute_external_tools.sh
+```

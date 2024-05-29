@@ -11,10 +11,10 @@ import multiprocessing
 script_path = Path(__file__).resolve()
 initialization_dir = script_path.parent
 bin_dir = initialization_dir.parent
-prepare_prerequisites = bin_dir.parent
+mbfl_feature_extraction_dir = bin_dir.parent
 
 # General directories
-src_dir = prepare_prerequisites.parent
+src_dir = mbfl_feature_extraction_dir.parent
 root_dir = src_dir.parent
 user_configs_dir = root_dir / 'user_configs'
 subjects_dir = root_dir / 'subjects'
@@ -41,9 +41,9 @@ def main():
 
 
 def start_process(subject_name):
-    global configure_json_file
+    global configure_json_file, mbfl_feature_extraction_dir
 
-    subject_working_dir = prepare_prerequisites / f"{subject_name}-working_directory"
+    subject_working_dir = mbfl_feature_extraction_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
     # 1. Read configurations
@@ -54,7 +54,7 @@ def start_process(subject_name):
     machine_cores_list = get_machine_cores_list(configs, subject_working_dir)
 
     # 3. distribute config directory to each machine-core
-    distribute_external_tools(configs, subject_working_dir, machine_cores_list)
+    distribute_config_dir(configs, subject_working_dir, machine_cores_list)
 
 
 def get_machine_cores_list(configs, subject_working_dir):
@@ -108,24 +108,24 @@ def get_from_local_machine(configs):
     return machine_cores_list
 
 
-def distribute_external_tools(configs, subject_working_dir, machine_cores_list):
+def distribute_config_dir(configs, subject_working_dir, machine_cores_list):
     global use_distributed_machines
 
     if configs[use_distributed_machines] == True:
-        distribute_external_tools_distributed_machines(configs, subject_working_dir, machine_cores_list)
+        distribute_config_dir_distributed_machines(configs, subject_working_dir, machine_cores_list)
 
 
-def distribute_external_tools_distributed_machines(configs, subject_working_dir, machine_cores_list):
+def distribute_config_dir_distributed_machines(configs, subject_working_dir, machine_cores_list):
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-prepare_prerequisites/"
+    base_dir = f"{home_directory}{subject_name}-mbfl_feature_extraction/"
     machine_subject_working_dir = base_dir + f"{subject_name}-working_directory/"
 
     # item being sent
-    ext_tool_dir = subject_working_dir / "external_tools"
-    assert ext_tool_dir.exists(), f"Subject repository {ext_tool_dir} does not exist"
+    config_dir = subject_working_dir / f"{subject_name}-configures"
+    assert config_dir.exists(), f"Subject repository {config_dir} does not exist"
 
-    bash_file = open('06-1_distribute_external_tools.sh', 'w')
+    bash_file = open('04-1_distribute_config.sh', 'w')
     bash_file.write('date\n')
     cnt = 0
     laps = 50
@@ -136,7 +136,7 @@ def distribute_external_tools_distributed_machines(configs, subject_working_dir,
 
         if machine_id not in machine_list:
             machine_list.append(machine_id)
-            cmd = "scp -r {} {}:{} & \n".format(ext_tool_dir, machine_id, machine_subject_working_dir)
+            cmd = "scp -r {} {}:{} & \n".format(config_dir, machine_id, machine_subject_working_dir)
             bash_file.write(cmd)
         
             cnt += 1
@@ -149,12 +149,12 @@ def distribute_external_tools_distributed_machines(configs, subject_working_dir,
     bash_file.write('wait\n')
     bash_file.write('date\n')
     
-    cmd = ['chmod', '+x', '06-1_distribute_external_tools.sh']
+    cmd = ['chmod', '+x', '04-1_distribute_config.sh']
     res = sp.call(cmd)
 
     # time.sleep(1)
 
-    # cmd = ['./06-1_distribute_external_tools.sh']
+    # cmd = ['./04-1_distribute_config.sh']
     # print("Distributing subject repository to workers...")
     # res = sp.call(cmd)
 

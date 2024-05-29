@@ -10,7 +10,7 @@ Prerequisite data contains the following contents for each buggy version
 
 
 ## 03-1 Initialization stage for preparing prerequisites
-Initializes directories for preparing prerequisites.
+Initializes directories and distribute buggy versions for preparing prerequisites.
 1. Initialization of working directory: ``<subject-name>-working_directory/``
 2. Assign/Distribute buggy versions
 3. Distribute subject repository
@@ -29,7 +29,7 @@ $ ./general_command --subject <subject-name> --buggy-versions-set <buggy-version
 
 * When using distributed machines
 ```
-$ ./general_command.py --subject libxml2
+$ ./general_command.py --subject libxml2 --buggy-versions-set <buggy-version-set-name>
 $ ./02-1_initiate_directory.sh
 $ ./02-2_distribute_buggy_versions.sh
 $ ./03-1_distribute_repo.sh

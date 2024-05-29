@@ -11,10 +11,10 @@ import multiprocessing
 script_path = Path(__file__).resolve()
 initialization_dir = script_path.parent
 bin_dir = initialization_dir.parent
-prepare_prerequisites = bin_dir.parent
+mbfl_feature_extraction_dir = bin_dir.parent
 
 # General directories
-src_dir = prepare_prerequisites.parent
+src_dir = mbfl_feature_extraction_dir.parent
 root_dir = src_dir.parent
 user_configs_dir = root_dir / 'user_configs'
 subjects_dir = root_dir / 'subjects'
@@ -41,9 +41,9 @@ def main():
 
 
 def start_process(subject_name):
-    global configure_json_file
+    global configure_json_file, mbfl_feature_extraction_dir
 
-    subject_working_dir = prepare_prerequisites / f"{subject_name}-working_directory"
+    subject_working_dir = mbfl_feature_extraction_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
     # 1. Read configurations
@@ -118,7 +118,7 @@ def distribute_external_tools(configs, subject_working_dir, machine_cores_list):
 def distribute_external_tools_distributed_machines(configs, subject_working_dir, machine_cores_list):
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-prepare_prerequisites/"
+    base_dir = f"{home_directory}{subject_name}-mbfl_feature_extraction/"
     machine_subject_working_dir = base_dir + f"{subject_name}-working_directory/"
 
     # item being sent
