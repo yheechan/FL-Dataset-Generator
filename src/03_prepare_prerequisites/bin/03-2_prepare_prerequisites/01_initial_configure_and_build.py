@@ -43,7 +43,7 @@ def start_process(subject_name, worker_name):
     subject_working_dir = prepare_prerequisites_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
-    core_working_dir = subject_working_dir / 'workers_selecting_buggy_versions' / worker_name
+    core_working_dir = subject_working_dir / 'workers_preparing_prerequisites' / worker_name
     assert core_working_dir.exists(), f"Core working directory {core_working_dir} does not exist"
 
     # 1. Read configurations

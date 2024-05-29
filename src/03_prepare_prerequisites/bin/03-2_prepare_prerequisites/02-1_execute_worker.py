@@ -42,7 +42,7 @@ def start_process(subject_name, worker_name):
     subject_working_dir = prepare_prerequisites_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
-    core_working_dir = subject_working_dir / 'workers_selecting_buggy_versions' / worker_name
+    core_working_dir = subject_working_dir / 'workers_preparing_prerequisites' / worker_name
     assert core_working_dir.exists(), f"Core working directory {core_working_dir} does not exist"
 
     # 1. Read configurations
@@ -72,12 +72,17 @@ def prepare_prerequisites(configs, core_working_dir, worker_name, assigned_versi
     global prepare_prerequisites_cmd_dir
 
     # --subject libxml2 --worker gaster23.swtv/core0 --version <assigned-version>
-    buggy_version_prerequisites = prepare_prerequisites_cmd_dir / '02-2_buggy_version_prerequisites.py'
+    line2function = prepare_prerequisites_cmd_dir / '02-2_extract_line2function.py'
+    measure_coverage = prepare_prerequisites_cmd_dir / '02-3_measure_coverage.py'
+    postprocess_coverage = prepare_prerequisites_cmd_dir / '02-4_postprocess_coverage.py'
+
 
     for target_version in assigned_versions_list:
         version_name = target_version.name
+
+        # 1. Extract line2function
         cmd = [
-            'python3', buggy_version_prerequisites,
+            'python3', line2function,
             '--subject', configs['subject_name'],
             '--worker', worker_name,
             '--version', version_name
@@ -85,6 +90,31 @@ def prepare_prerequisites(configs, core_working_dir, worker_name, assigned_versi
         res = sp.run(cmd)
         if res.returncode != 0:
             raise Exception('Failed to execute buggy version prerequisites script')
+
+
+        # 2. Measure coverage
+        cmd = [
+            'python3', measure_coverage,
+            '--subject', configs['subject_name'],
+            '--worker', worker_name,
+            '--version', version_name
+        ]
+        res = sp.run(cmd)
+        if res.returncode != 0:
+            raise Exception('Failed to execute buggy version prerequisites script')
+        
+        # 3. Postprocess coverage
+        cmd = [
+            'python3', postprocess_coverage,
+            '--subject', configs['subject_name'],
+            '--worker', worker_name,
+            '--version', version_name
+        ]
+        res = sp.run(cmd)
+        if res.returncode != 0:
+            raise Exception('Failed to execute buggy version prerequisites script')
+    
+    print('Successfully executed the buggy version prerequisites script')
     
 
 

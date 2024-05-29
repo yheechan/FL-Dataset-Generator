@@ -49,12 +49,12 @@ def start_process(subject_name):
     # 1. Read configurations
     configs = read_configs(subject_name, subject_working_dir)
 
-    # 3. get machine-core information
+    # 2. get machine-core information
     # machine_cores_list (list): [machine_name:core_id]
     machine_cores_list = get_machine_cores_list(configs, subject_working_dir)
 
-    # 4. distribute config directory to each machine-core
-    distribute_prerequisites_cmd(configs, subject_working_dir, machine_cores_list)
+    # 3. distribute config directory to each machine-core
+    distribute_external_tools(configs, subject_working_dir, machine_cores_list)
 
 
 def get_machine_cores_list(configs, subject_working_dir):
@@ -108,26 +108,24 @@ def get_from_local_machine(configs):
     return machine_cores_list
 
 
-def distribute_prerequisites_cmd(configs, subject_working_dir, machine_cores_list):
+def distribute_external_tools(configs, subject_working_dir, machine_cores_list):
     global use_distributed_machines
 
     if configs[use_distributed_machines] == True:
-        distribute_prerequisites_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list)
+        distribute_external_tools_distributed_machines(configs, subject_working_dir, machine_cores_list)
 
 
-def distribute_prerequisites_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list):
-    global bin_dir
-
+def distribute_external_tools_distributed_machines(configs, subject_working_dir, machine_cores_list):
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
     base_dir = f"{home_directory}{subject_name}-prepare_prerequisites/"
-    machine_bin_dir = base_dir + 'bin/'
+    machine_subject_working_dir = base_dir + f"{subject_name}-working_directory/"
 
     # item being sent
-    test_versions_cmd_dir = bin_dir / '03-2_prepare_prerequisites'
-    assert test_versions_cmd_dir.exists(), f"Test mutants directory {test_versions_cmd_dir} does not exist"
+    config_dir = subject_working_dir / "external_tools"
+    assert config_dir.exists(), f"Subject repository {config_dir} does not exist"
 
-    bash_file = open('05-1_distribute_prepare_prerequisites_cmd.sh', 'w')
+    bash_file = open('06-1_distribute_external_tools.sh', 'w')
     bash_file.write('date\n')
     cnt = 0
     laps = 50
@@ -138,7 +136,7 @@ def distribute_prerequisites_cmd_distributed_machines(configs, subject_working_d
 
         if machine_id not in machine_list:
             machine_list.append(machine_id)
-            cmd = "scp -r {} {}:{} & \n".format(test_versions_cmd_dir, machine_id, machine_bin_dir)
+            cmd = "scp -r {} {}:{} & \n".format(config_dir, machine_id, machine_subject_working_dir)
             bash_file.write(cmd)
         
             cnt += 1
@@ -151,12 +149,12 @@ def distribute_prerequisites_cmd_distributed_machines(configs, subject_working_d
     bash_file.write('wait\n')
     bash_file.write('date\n')
     
-    cmd = ['chmod', '+x', '05-1_distribute_prepare_prerequisites_cmd.sh']
+    cmd = ['chmod', '+x', '06-1_distribute_external_tools.sh']
     res = sp.call(cmd)
 
     # time.sleep(1)
 
-    # cmd = ['./05-1_distribute_prepare_prerequisites_cmd.sh']
+    # cmd = ['./06-1_distribute_external_tools.sh']
     # print("Distributing subject repository to workers...")
     # res = sp.call(cmd)
 

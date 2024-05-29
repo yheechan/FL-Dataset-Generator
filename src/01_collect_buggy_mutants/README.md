@@ -2,10 +2,10 @@
 
 ## 01-1 Generate mutants
 1. Initialize working directory for target subject ``<subject-name>-working_directory/``
-    2. Copies subject source repository
-    3. Copies user configurations of target subject
-    4. Copies configure and build script to indicated paths
-    5. Copies MUSICUP executable to ``external_tools/`` directory in working directory
+    * Copies subject source repository
+    * Copies user configurations of target subject
+    * Copies configure and build script to indicated paths
+    * Copies MUSICUP executable to ``external_tools/`` directory in working directory
 2. Executes configure and build script in indicated paths
 3. Generates mutants using MUSICUP and saves to ``generated_mutants/`` directory in working directory
 
@@ -50,6 +50,7 @@ $ ./03-1_test_mutants_on_distributed_machines.sh
 
 
 ## 01-4 Gather buggy mutants (only in use of multi-machines)
+* gathers the buggy versions form each machine's cores to ``<subject>-working_directory/buggy_mutants/``
 ```
 $ ./01_gather_buggy_mutants.py --subject libxml2
 ```

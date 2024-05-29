@@ -1,16 +1,17 @@
 # 02 Selecting usable buggy versions
 "Usable" buggy versions refer to buggy versions of target subject where:
 * all the failing test case executes its designated **buggy line number** (coverage measureable)
+* atleast one failing and one passing TC exists.
 
 
 ## 02-1 Selecting initial buggy version
-This step specifically describes the selected buggy versions as **"initial"** because selected buggy versions at the step have a probablity of being excluded due it is checked to be not **"usable"**.
+This step specifically describes the selected buggy versions as **"initial"** because selected buggy versions at this step have a probablity of being excluded when it doesn't satisfy the standard of being **"usable"**.
 
 1. Initialize working directory for target subject ``<subject-name>-working_directory/``
-    2. Copies subject source repository
-    3. Copies user configurations of target subject
-    4. Copies configure and build script to indicated paths
-2. Randomly selected user given number of buggy versions (in which it includes the **real-world-buggy-versions** given by the user)
+    * Copies subject source repository
+    * Copies user configurations of target subject
+    * Copies configure and build script to indicated paths
+2. Randomly selected user given number of buggy versions (in which it includes the **real-world-buggy-versions** given by the user in config directory)
 
 ```
 $ ./general_command.py --subject libxml2 --num-versions 300
@@ -39,10 +40,6 @@ $ ./04-1_distribute_test_buggy_versions_cmd.sh
 
 
 ## 02-3 Testing buggy versions (for finding "usable" buggy versions)
-
-
-
-## 01-3 Test mutants & collect buggy mutants
 * Command to run bug collection of one worker (core)
 ```
 $ ./general_command.py --subject libxml2 --worker gaster23.swtv/core0
@@ -61,32 +58,34 @@ $ ./03-1_test_buggy_versions_on_distributed_machines.sh
 ```
 
 
-## 01-4 Gather buggy mutants (only in use of multi-machines)
-```
-$ ./01_gather_buggy_mutants.py --subject libxml2
-```
-
-
 ## 02-4 Gather buggy versions
-* Command to run gathering buggy version to one directory
+Command to run gathering buggy version to one directory
+
+* Command to gather buggy version when using single machine
 ```
 $ ./01_gather_buggy_versions.py --subject libxml2
+```
+
+* Command to gather buggy versions when using multiple distributed machines.
+```
+$ ./01_gather_buggy_versions.py --subject libxml2
+$ ./01-1_retrieve_usable_buggy_versions.sh
 ```
 
 
 ## 02-5 analyze_buggy_versions (optional)
 This directory contains executable to analyze statistics of test cases & reduce # of TCs in the test suite.
 
-* 1. Analyze TCs statistics of each version in buggy versions set
+1. Analyze TCs statistics of each version in buggy versions set
     * where:
         * ``<subject-name>``: is the name of the target subject
         * ``<dir-name>``: is the directory name that contains the target buggy versions
-        * ``csv-filename>``: is the csv file to save statistics of TCs per buggy version
+        * ``<csv-filename>``: is the csv file to save statistics of TCs per buggy version
 ```
 $ ./01_testsuite_statistics.py --subject <subject-name> --versions-set-name <dir-name> --output-csv <csv-filename>
 ```
 
-* 2. form a file of reduced & excluded TCs in a text file
+2. form a file of reduced & excluded TCs in a text file
     * where:
         * ``<subject-name>``: is the name of the target subject
         * ``<dir-name>``: is the directory name that contains the target buggy versions
@@ -94,4 +93,11 @@ $ ./01_testsuite_statistics.py --subject <subject-name> --versions-set-name <dir
     * This step saves the set of buggy versions with reduced test suite size within ``<dir-name>-reduced/`` directory.
 ```
 ./02_form_reduced_testsuite --subject <subject-name> --versions-set-name <dir-name> --testsuite-size <num>
+```
+
+3. apply reduction of TCs according to the reduced file map
+    * This generates a new directory (set of buggy versions) which has reduced TCs.
+    * The excluded TCs are recorded in ``testsuite_info/excluded_tcs.txt`` file
+```
+./03_apply_reduced_testsuite --subject libxml2 <subject-name> --version-set-name <dir-name> --reduced-testsuite <reduced-testsuite-filename>
 ```

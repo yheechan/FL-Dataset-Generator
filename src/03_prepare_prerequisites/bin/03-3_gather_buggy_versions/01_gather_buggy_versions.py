@@ -9,12 +9,12 @@ import multiprocessing
 
 # Current working directory
 script_path = Path(__file__).resolve()
-initialization_dir = script_path.parent
-bin_dir = initialization_dir.parent
-prepare_prerequisites = bin_dir.parent
+prepare_prerequisites_cmd_dir = script_path.parent
+bin_dir = prepare_prerequisites_cmd_dir.parent
+prepare_prerequisites_dir = bin_dir.parent
 
 # General directories
-src_dir = prepare_prerequisites.parent
+src_dir = prepare_prerequisites_dir.parent
 root_dir = src_dir.parent
 user_configs_dir = root_dir / 'user_configs'
 subjects_dir = root_dir / 'subjects'
@@ -43,18 +43,83 @@ def main():
 def start_process(subject_name):
     global configure_json_file
 
-    subject_working_dir = prepare_prerequisites / f"{subject_name}-working_directory"
+    subject_working_dir = prepare_prerequisites_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
     # 1. Read configurations
     configs = read_configs(subject_name, subject_working_dir)
 
+    # 2. initialize buggy_versionss directory
+    gather_dir = initialize_prerequisites_directory(configs, subject_working_dir)
+
     # 3. get machine-core information
     # machine_cores_list (list): [machine_name:core_id]
     machine_cores_list = get_machine_cores_list(configs, subject_working_dir)
 
-    # 4. distribute config directory to each machine-core
-    distribute_prerequisites_cmd(configs, subject_working_dir, machine_cores_list)
+    # 4. retrieve buggy mutants from workers
+    retrieve_buggy_versions(configs, subject_working_dir, gather_dir, machine_cores_list)
+
+def initialize_prerequisites_directory(configs, subject_working_dir):
+    gather_dir = subject_working_dir / 'prerequisite_data'
+    gather_dir.mkdir(exist_ok=True)
+    return gather_dir
+
+def retrieve_buggy_versions(configs, subject_working_dir, gather_dir, machine_cores_list):
+    global use_distributed_machines
+
+    if configs[use_distributed_machines] == True:
+        retrieve_buggy_versions_distributed_machines(configs, subject_working_dir, gather_dir, machine_cores_list)
+    else:
+        retrieve_buggy_versions_single_machine(configs, subject_working_dir, gather_dir, machine_cores_list)
+
+def retrieve_buggy_versions_distributed_machines(configs, subject_working_dir, gather_dir, machine_cores_list):
+    home_directory = configs['home_directory']
+    subject_name = configs['subject_name']
+    workers = f"{home_directory}{subject_name}-prepare_prerequisites/{subject_name}-working_directory/workers_preparing_prerequisites/"
+
+    bash_file = open('01-1_retrieve_prerequisites.sh', 'w')
+    bash_file.write('date\n')
+    cnt = 0
+    laps = 100
+    for machine_core in machine_cores_list:
+        machine_id = machine_core.split(':')[0]
+        core_id = machine_core.split(':')[1]
+        machine_core_dir = f"{workers}{machine_id}/{core_id}/assigned_buggy_versions/*"
+
+        cmd = 'scp -r {}:{} {} & \n'.format(machine_id, machine_core_dir, gather_dir)
+        bash_file.write(f"{cmd}")
+        
+        cnt += 1
+        if cnt % laps == 0:
+            bash_file.write("sleep 0.2s\n")
+            bash_file.write("wait\n")
+    
+    bash_file.write('echo scp done, waiting...\n')
+    bash_file.write('date\n')
+    bash_file.write('wait\n')
+    bash_file.write('date\n')
+    
+    cmd = ['chmod', '+x', '01-1_retrieve_prerequisites.sh']
+    res = sp.call(cmd)
+
+    # time.sleep(1)
+
+    # cmd = ['./01-1_retrieve_prerequisites.sh']
+    # print("Retrieving buggy mutants from workers...")
+    # res = sp.call(cmd)
+
+
+def retrieve_buggy_versions_single_machine(configs, subject_working_dir, gather_dir, machine_cores_list):
+    workers_dir = subject_working_dir / 'workers_preparing_prerequisites'
+
+    for machine_core in machine_cores_list:
+        machine_id = machine_core.split(':')[0]
+        core_id = machine_core.split(':')[1]
+        machine_core_bug_dir = workers_dir.__str__() + f"/{machine_id}/{core_id}/assigned_buggy_versions/*"
+        cmd = f"cp -r {machine_core_bug_dir} {gather_dir}"
+        res = sp.call(cmd, shell=True)
+        
+    print("Retrieved buggy mutants from workers")
 
 
 def get_machine_cores_list(configs, subject_working_dir):
@@ -106,59 +171,6 @@ def get_from_local_machine(configs):
         machine_cores_list.append(f"{machine_name}:{core_id}")
     
     return machine_cores_list
-
-
-def distribute_prerequisites_cmd(configs, subject_working_dir, machine_cores_list):
-    global use_distributed_machines
-
-    if configs[use_distributed_machines] == True:
-        distribute_prerequisites_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list)
-
-
-def distribute_prerequisites_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list):
-    global bin_dir
-
-    home_directory = configs['home_directory']
-    subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-prepare_prerequisites/"
-    machine_bin_dir = base_dir + 'bin/'
-
-    # item being sent
-    test_versions_cmd_dir = bin_dir / '03-2_prepare_prerequisites'
-    assert test_versions_cmd_dir.exists(), f"Test mutants directory {test_versions_cmd_dir} does not exist"
-
-    bash_file = open('05-1_distribute_prepare_prerequisites_cmd.sh', 'w')
-    bash_file.write('date\n')
-    cnt = 0
-    laps = 50
-    machine_list = []
-    for machine_core in machine_cores_list:
-        machine_id = machine_core.split(':')[0]
-        core_id = machine_core.split(':')[1]
-
-        if machine_id not in machine_list:
-            machine_list.append(machine_id)
-            cmd = "scp -r {} {}:{} & \n".format(test_versions_cmd_dir, machine_id, machine_bin_dir)
-            bash_file.write(cmd)
-        
-            cnt += 1
-            if cnt % laps == 0:
-                bash_file.write("sleep 0.2s\n")
-                bash_file.write("wait\n")
-    
-    bash_file.write('echo scp done, waiting...\n')
-    bash_file.write('date\n')
-    bash_file.write('wait\n')
-    bash_file.write('date\n')
-    
-    cmd = ['chmod', '+x', '05-1_distribute_prepare_prerequisites_cmd.sh']
-    res = sp.call(cmd)
-
-    # time.sleep(1)
-
-    # cmd = ['./05-1_distribute_prepare_prerequisites_cmd.sh']
-    # print("Distributing subject repository to workers...")
-    # res = sp.call(cmd)
 
 
 

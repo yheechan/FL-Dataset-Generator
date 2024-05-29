@@ -37,10 +37,10 @@ real_world_buggy_versions = 'real_world_buggy_versions'
 def main():
     parser = make_parser()
     args = parser.parse_args()
-    start_process(args.subject)
+    start_process(args.subject, args.buggy_versions_set)
 
 
-def start_process(subject_name):
+def start_process(subject_name, buggy_versions_set):
     global configure_json_file
 
     subject_working_dir = prepare_prerequisites / f"{subject_name}-working_directory"
@@ -49,12 +49,36 @@ def start_process(subject_name):
     # 1. Read configurations
     configs = read_configs(subject_name, subject_working_dir)
 
+    # 2. make a list of buggy_versions: list, path to the buggy versions directory
+    buggy_versions = get_buggy_versions(subject_name, buggy_versions_set)
+
     # 2. get machine-core information
     # machine_cores_list (list): [machine_name:core_id]
     machine_cores_list = get_machine_cores_list(configs, subject_working_dir)
 
+    # # 4. distribute bugs to machine-cores equally
+    # # distribution_machineCore2bugsList (dict): {machine_name:core_id: [buggy_version_dir_list]}
+    distribution_machineCore2bugsList = assign_buggy_versions(configs, subject_working_dir, buggy_versions, machine_cores_list)
+
     # 3. distribute subject repository to each machine-core
-    distribute_subject_repo(configs, subject_working_dir, machine_cores_list)
+    distribute_subject_repo(configs, subject_working_dir, distribution_machineCore2bugsList)
+
+def get_buggy_versions(subject_name, buggy_versions_set):
+    global src_dir
+    
+    # copy usable buggy versions directory to working directory
+    select_usable_buggy_versions_dir = src_dir / '02_select_usable_buggy_versions'
+    buggy_versions_working_dir = select_usable_buggy_versions_dir / f'{subject_name}-working_directory'
+    buggy_versions_dir = buggy_versions_working_dir / buggy_versions_set
+    assert buggy_versions_dir.exists(), 'Buggy versions directory does not exist'
+
+    buggy_versions = []
+    for bug_version_dir in buggy_versions_dir.iterdir():
+        buggy_versions.append(bug_version_dir)
+    
+    print(f"Total buggy versions: {len(buggy_versions)}")
+
+    return buggy_versions
 
 
 def get_machine_cores_list(configs, subject_working_dir):
@@ -107,17 +131,35 @@ def get_from_local_machine(configs):
     
     return machine_cores_list
 
+def assign_buggy_versions(configs, subject_working_dir, buggy_versions, machine_cores_list):
 
-def distribute_subject_repo(configs, subject_working_dir, machine_cores_list):
+    # equally distribute the bugs in buggy_verisons_list to machine_cores_list
+    distribution_machineCore2bugsList = {}
+    for idx, buggy_version_dir in enumerate(buggy_versions):
+        machine_core = machine_cores_list[idx % len(machine_cores_list)]
+
+        if machine_core not in distribution_machineCore2bugsList:
+            distribution_machineCore2bugsList[machine_core] = []
+        
+        distribution_machineCore2bugsList[machine_core].append(buggy_version_dir)
+    
+    print(f"Buggy versions are assigned to {len(distribution_machineCore2bugsList)} machine-cores")
+    # for machine_core, mutants in distribution_machineCore2bugsList.items():
+    #     print(f"{machine_core}: {len(mutants)}")
+    
+    return distribution_machineCore2bugsList
+
+
+def distribute_subject_repo(configs, subject_working_dir, distribution_machineCore2bugsList):
     global use_distributed_machines
 
     if configs[use_distributed_machines] == True:
-        distribute_subject_repo_distributed_machines(configs, subject_working_dir, machine_cores_list)
+        distribute_subject_repo_distributed_machines(configs, subject_working_dir, distribution_machineCore2bugsList)
     else:
-        distribute_subject_repo_single_machine(configs, subject_working_dir, machine_cores_list)
+        distribute_subject_repo_single_machine(configs, subject_working_dir, distribution_machineCore2bugsList)
 
 
-def distribute_subject_repo_distributed_machines(configs, subject_working_dir, machine_cores_list):
+def distribute_subject_repo_distributed_machines(configs, subject_working_dir, distribution_machineCore2bugsList):
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
     base_dir = f"{home_directory}{subject_name}-prepare_prerequisites/"
@@ -132,7 +174,7 @@ def distribute_subject_repo_distributed_machines(configs, subject_working_dir, m
     bash_file.write('date\n')
     cnt = 0
     laps = 50
-    for machine_core in machine_cores_list:
+    for machine_core, buggy_versions_list in distribution_machineCore2bugsList.items():
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
         machine_core_dir = f"{workers_dir}{machine_id}/{core_id}/"
@@ -159,13 +201,13 @@ def distribute_subject_repo_distributed_machines(configs, subject_working_dir, m
     # print("Distributing subject repository to workers...")
     # res = sp.call(cmd)
 
-def distribute_subject_repo_single_machine(configs, subject_working_dir, machine_cores_list):
+def distribute_subject_repo_single_machine(configs, subject_working_dir, distribution_machineCore2bugsList):
     workers_dir = subject_working_dir / 'workers_preparing_prerequisites'
 
     subject_repo = subject_working_dir / configs['subject_name']
     assert subject_repo.exists(), f"Subject repository {subject_repo} does not exist"
 
-    for machine_core in machine_cores_list:
+    for machine_core, buggy_versions_list in distribution_machineCore2bugsList.items():
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
         machine_core_dir = workers_dir / f"{machine_id}/{core_id}/"
@@ -182,6 +224,7 @@ def distribute_subject_repo_single_machine(configs, subject_working_dir, machine
 def make_parser():
     parser = argparse.ArgumentParser(description='Copy subject to working directory')
     parser.add_argument('--subject', type=str, help='Subject name', required=True)
+    parser.add_argument('--buggy-versions-set', type=str, help='Buggy versions set', required=True)
     return parser
 
 def read_configs(subject_name, subject_working_dir):

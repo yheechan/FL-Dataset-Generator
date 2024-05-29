@@ -6,7 +6,8 @@
     "compile_command_path": "libxml2/compile_commands.json",
     "test_case_directory": "libxml2/testcases/",
     "subject_language": "C",
-    "use_distributed_machines": false,
+    "use_distributed_machines": true,
+    "exclude_cct": true,
     "single_machine": {
         "machine_name": "gaster23.swtv",
         "machine_cores": 32
@@ -17,6 +18,13 @@
         "libxml2/relaxng.c",
         "libxml2/xmlregexp.c",
         "libxml2/xmlschemas.c"
+    ],
+    "target_preprocessed_files": [
+        "libxml2/parser.i",
+        "libxml2/HTMLparser.i",
+        "libxml2/relaxng.i",
+        "libxml2/xmlregexp.i",
+        "libxml2/xmlschemas.i"
     ],
     "real_world_buggy_versions": true,
     "environment_setting": {
