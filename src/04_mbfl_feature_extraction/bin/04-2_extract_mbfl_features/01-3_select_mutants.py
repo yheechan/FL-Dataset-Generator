@@ -5,6 +5,7 @@ import argparse
 import json
 import subprocess as sp
 import os
+import random
 
 # Current working directory
 script_path = Path(__file__).resolve()
@@ -78,10 +79,6 @@ def start_process(subject_name, worker_name, version_name):
     buggy_code_file = get_buggy_code_file(version_dir, buggy_code_filename)
     # print(f"Buggy code file: {buggy_code_file.name}")
 
-    # 5. get extractor
-    music = subject_working_dir / 'external_tools/music'
-    assert music.exists(), f"Music directory {music} does not exist"
-
 
     # 6. get lines executed by failing test cases per target files
     lines_executed_by_failing_tc = get_lines_executed_by_failing_tcs(version_dir, target_code_file_path, buggy_lineno, configs['target_files'])
@@ -90,12 +87,106 @@ def start_process(subject_name, worker_name, version_name):
         print(f"{target_file}: {len(lines)}")
 
 
+    # 7. select mutants from core_working_dir/generated_mutants/<version_name>/<mutant_dir_for_each_target_file>
+    select_mutants(configs, core_working_dir, version_name, version_dir, lines_executed_by_failing_tc, subject_name)
+
+
     # 7. conduct run tests on buggy version with failing test cases
-    generate_mutants(
-        configs, core_working_dir, version_name, 
-        target_code_file_path, buggy_code_file, 
-        music, version_dir, lines_executed_by_failing_tc
-    )
+    # generate_mutants(
+    #     configs, core_working_dir, version_name, 
+    #     target_code_file_path, buggy_code_file, 
+    #     music, version_dir, lines_executed_by_failing_tc
+    # )
+
+def select_mutants(
+        configs, core_working_dir, version_name,
+        version_dir, lines_executed_by_failing_tc, subject_name):
+    
+    # --- prepare needed directories
+    version_mutants_dir = core_working_dir / 'generated_mutants' / version_name
+    assert version_mutants_dir.exists(), f"Version mutants directory {version_mutants_dir} does not exist"
+
+    max_mutants = configs['max_mutants']
+
+    # --- start selecting mutants
+    files2mutants = {}
+    tot_mutant_cnt = 0
+    for target_file, lines in lines_executed_by_failing_tc.items():
+        file_tot_mutant_cnt = 0
+
+        filename = target_file.split('/')[-1]
+        # initiate dictionary for selected mutants on file-line basis
+        files2mutants[filename] = {}
+        for line in lines:
+            files2mutants[filename][line] = []
+        
+        # get mutants for each line
+        file_mutants_dir = version_mutants_dir / f"{subject_name}-{filename}"
+        assert file_mutants_dir.exists(), f"File mutants directory {file_mutants_dir} does not exist"
+        
+        code_name = target_file.split('.')[0]
+        mut_db_csv_name = f"{code_name}_mut_db.csv"
+        mut_db_csv = file_mutants_dir / mut_db_csv_name
+        # this is when failing tcs doesn't execute any line in the target file
+        if not mut_db_csv.exists():
+            print(f"Mutants database csv {mut_db_csv.name} does not exist")
+            continue
+
+        print(f"Reading mutants from {mut_db_csv.name}")
+        with mut_db_csv.open() as f:
+            lines = f.readlines()
+            mutants = lines[2:]
+            random.shuffle(mutants)
+            print(f"Total mutants: {len(mutants)}")
+            for mutant_line in mutants:
+                mutant_line = mutant_line.strip()
+
+                # 0 Mutant Filename
+                # 1 Mutation Operator
+                # 2 Start Line#
+                # 3 Start Col#
+                # 4 End Line#
+                # 5 End Col#
+                # 6 Target Token
+                # 7 Start Line#
+                # 8 Start Col#
+                # 9 End Line#
+                # 10 End Col#
+                # 11 Mutated Token
+                # 12 Extra Info
+                info = mutant_line.split(',')
+                mutant_filename = info[0]
+                mutant_lineno = info[2]
+
+                # do not select mutants for lines that are not executed by failing test cases
+                if mutant_lineno not in files2mutants[filename]:
+                    print(f"Mutant line {mutant_lineno} is not executed by failing test cases")
+                    continue
+
+                # select mutant
+                if len(files2mutants[filename][mutant_lineno]) < max_mutants:
+                    files2mutants[filename][mutant_lineno].append(mutant_line)
+                    file_tot_mutant_cnt += 1
+                    tot_mutant_cnt += 1
+
+            print(f"Selected mutants for {filename}: {file_tot_mutant_cnt}")
+    print(f"Total selected mutants: {tot_mutant_cnt}")
+
+
+
+
+        
+        # break
+
+
+
+
+
+        
+
+
+    
+    
 
 
 def get_lines_executed_by_failing_tcs(version_dir, target_code_file_path, buggy_lineno, target_files):
@@ -157,7 +248,7 @@ def generate_mutants(
         music, version_dir, lines_executed_by_failing_tc):
 
     # --- prepare needed directories
-    max_mutants = configs['max_mutants']
+    select_mutant_num = configs['num_mutant_per_line']
     worksTodo = intitiate_mutants_dir(core_working_dir, version_name, configs['target_files'])
 
     # --- start generating mutants
@@ -199,7 +290,7 @@ def generate_mutants(
         if len(lines) == 0:
             print(f"No lines executed by failing test cases for {filename}")
             continue
-        gen_mutants_work(target_file, output_dir, compile_command, max_mutants, music, lines)
+        gen_mutants_work(target_file, output_dir, compile_command, select_mutant_num, music, lines)
     
     # 7. Apply patch reverse
     apply_patch(target_code_file_path, buggy_code_file, patch_file, core_working_dir, True)
@@ -225,7 +316,7 @@ def show_statistics(worksTodo):
 
 
 
-def gen_mutants_work(target_file, output_dir, compile_command, max_mutants, music_cmd, lines):
+def gen_mutants_work(target_file, output_dir, compile_command, select_mutant_num, music_cmd, lines):
     global not_using_operators
     unused_ops = ','.join(not_using_operators)
     execed_lines = ','.join(lines)
@@ -234,7 +325,7 @@ def gen_mutants_work(target_file, output_dir, compile_command, max_mutants, musi
         music_cmd,
         str(target_file),
         '-o', str(output_dir),
-        '-ll', str(max_mutants),
+        '-ll', str(select_mutant_num),
         '-l', '2',
         '-d', unused_ops,
         '-i', execed_lines,

@@ -213,6 +213,7 @@ void MutantDatabase::WriteEntryToDatabaseFile(
   else if (pos_comma != string::npos && pos_newline != string::npos)
     len = min(pos_newline, pos_comma);
   
+  // Always wrap token with double quotes if it starts with double quotes
   if (len != 0)
   {
     token = token.substr(0, len);
@@ -247,13 +248,13 @@ void MutantDatabase::WriteEntryToDatabaseFile(
       token.append("\"");
   }
 
-  mutant_db_file << token << ',';
+  mutant_db_file << token << ",\n";
 
-  vector<string> additional_infos = entry.getAdditionalInfo();
-  // write additional info if user wants
-  for (int i = 0; i < additional_infos.size()-1; i++)
-    mutant_db_file << additional_infos[i] << ",";
-  mutant_db_file << additional_infos[additional_infos.size()-1] << endl;
+  // vector<string> additional_infos = entry.getAdditionalInfo();
+  // // write additional info if user wants
+  // for (int i = 0; i < additional_infos.size()-1; i++)
+  //   mutant_db_file << additional_infos[i] << ",";
+  // mutant_db_file << additional_infos[additional_infos.size()-1] << endl;
 
   // close database file
   mutant_db_file.close(); 

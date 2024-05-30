@@ -64,13 +64,13 @@ def extract_mbfl_features(configs, core_working_dir, worker_name, assigned_versi
     subj_name = configs['subject_name']
     assert subj_name == subject_name, f"Subject name mismatch: {subj_name} != {subject_name}"
 
-    patch_buggy_version_code = '01-2_patch_buggy_version_code.py'
-    generate_mutants = '01-1_generate_mutants.py'
+    generate_mutants = '01-2_generate_mutants.py'
     select_mutants = '01-4_select_mutants.py'
     measure_mbfl_features = '01-5_measure_mbfl_features.py'
 
     for target_version in assigned_versions_list:
         version_name = target_version.name
+        print(f">> Working on version: {version_name}\n")
 
         # 1. generate mutants
         cmd = [
@@ -79,6 +79,9 @@ def extract_mbfl_features(configs, core_working_dir, worker_name, assigned_versi
             '--worker', worker_name,
             '--version', version_name
         ]
+        res = sp.run(cmd)
+        if res.returncode != 0:
+            raise Exception('Failed to execute generate mutants script')
 
         #. Apply buggy version code
     pass
