@@ -41,7 +41,7 @@ $ ./06-1_distribute_external_tools.sh
 ## 03-2 Prepare prerequisites data for bug versions
 This step first builds the buggy version and extracts line-to-function mapping inforation. This step then executes utilizing test cases and measures the coverage. It then uses the coverage information of each test case to form a postprocess coverage information as CSV file format.
 
-### Usage when executing prepation of prerequisites on single core of a machine
+### Usage when executing preparation of prerequisites on single core of a machine
 ```
 $ ./general_command --subject <subject-name> --worker gaster23.swtc/core0
 ```
@@ -56,7 +56,7 @@ $ ./02-4_postprocess_coverage.py --subject libxml2 --worker gaster23.swtv/core0 
 
 ### Usage when executing prepartion of prerequisites on multiple distributed machines
 ```
-$ ./03_prepare_prerequisites_on_distributed_machines.py
+$ ./03_prepare_prerequisites_on_distributed_machines.py --subject libxml2 --buggy-versions-set <buggy-version-set-name>
 $ ./03-1_prepare_prerequisites_on_distributed_mahcines.sh
 ```
 

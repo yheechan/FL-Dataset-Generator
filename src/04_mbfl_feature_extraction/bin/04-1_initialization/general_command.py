@@ -8,7 +8,7 @@ initialize_working_directory = '01_initialize_working_directory.py'
 distribute_buggy_versions = '02_distribute_buggy_versions.py'
 distribute_repo = '03_distribute_repo.py'
 distribute_config = '04_distribute_config.py'
-distribute_prepare_prerequisites_cmd = '05_distribute_prepare_prerequisites_cmd.py'
+distribute_mbfl_extraction_cmd = '05_distribute_mbfl_extraction_cmd.py'
 distribute_external_tools = '06_distribute_external_tools.py'
 
 def main():
@@ -47,7 +47,7 @@ def start_process(subject_name):
     print('>> Distributed config directory')
     
     # 5. distribute prepare prerequisites command
-    cmd = ['python3', distribute_prepare_prerequisites_cmd, '--subject', subject_name]
+    cmd = ['python3', distribute_mbfl_extraction_cmd, '--subject', subject_name]
     res = sp.run(cmd)
     if res.returncode != 0:
         raise Exception('Failed to execute distribute prepare prerequisites command script')

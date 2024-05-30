@@ -33,17 +33,6 @@ machines_json_file = 'machines.json'
 configure_json_file = 'configurations.json'
 real_world_buggy_versions = 'real_world_buggy_versions'
 
-my_env = os.environ.copy()
-
-not_using_operators = [
-    "DirVarAriNeg", "DirVarBitNeg", "DirVarLogNeg", "DirVarIncDec",
-    "DirVarRepReq", "DirVarRepCon", "DirVarRepPar", "DirVarRepGlo", 
-    "DirVarRepExt", "DirVarRepLoc", "IndVarAriNeg", "IndVarBitNeg", 
-    "IndVarLogNeg", "IndVarIncDec", "IndVarRepReq", "IndVarRepCon", 
-    "IndVarRepPar", "IndVarRepGlo", "IndVarRepExt", "IndVarRepLoc",
-    "STRI"
-]
-
 def main():
     parser = make_parser()
     args = parser.parse_args()
@@ -81,6 +70,7 @@ def start_process(subject_name, worker_name, version_name):
 
 
     # 6. get lines executed by failing test cases per target files
+    # IT ALSO VALIDATES THE LINES EXECUTED BY FAILING TC CONTAINS THE BUGGY LINE
     lines_executed_by_failing_tc = get_lines_executed_by_failing_tcs(version_dir, target_code_file_path, buggy_lineno, configs['target_files'])
     print(f"Lines executed by failing test cases:")
     for target_file, lines in lines_executed_by_failing_tc.items():
@@ -88,15 +78,30 @@ def start_process(subject_name, worker_name, version_name):
 
 
     # 7. select mutants from core_working_dir/generated_mutants/<version_name>/<mutant_dir_for_each_target_file>
-    select_mutants(configs, core_working_dir, version_name, version_dir, lines_executed_by_failing_tc, subject_name)
+    selected_fileline2mutants = select_mutants(configs, core_working_dir, version_name, version_dir, lines_executed_by_failing_tc, subject_name)
 
+    # 8. write selected mutants to a file
+    write_selected_mutants(core_working_dir, version_name, selected_fileline2mutants)
 
-    # 7. conduct run tests on buggy version with failing test cases
-    # generate_mutants(
-    #     configs, core_working_dir, version_name, 
-    #     target_code_file_path, buggy_code_file, 
-    #     music, version_dir, lines_executed_by_failing_tc
-    # )
+def write_selected_mutants(core_working_dir, version_name, selected_fileline2mutants):
+    mutant_data_dir = core_working_dir / 'mutant_data'
+    mutant_data_dir.mkdir(exist_ok=True)
+
+    version_mutant_dir = mutant_data_dir / version_name
+    version_mutant_dir.mkdir(exist_ok=True)
+
+    selected_mutants_file = version_mutant_dir / 'selected_mutants.csv'
+    mutant_cnt = 1
+    with selected_mutants_file.open('w') as f:
+        f.write(",,,,,Before Mutation,,,,,After Mutation\n")
+        f.write("target filename,mutant_id,lineno,Mutant Filename,Mutation Operator,Start Line#,Start Col#,End Line#,End Col#,Target Token,Start Line#,Start Col#,End Line#,End Col#,Mutated Token,Extra Info\n")
+        for filename, fileline2mutants in selected_fileline2mutants.items():
+            for line, mutants in fileline2mutants.items():
+                for mutant in mutants:
+                    mutant_id = f"mutant_{mutant_cnt}"
+                    f.write(f"{filename},{mutant_id},{line},{mutant}\n")
+                    mutant_cnt += 1
+
 
 def select_mutants(
         configs, core_working_dir, version_name,
@@ -172,21 +177,8 @@ def select_mutants(
             print(f"Selected mutants for {filename}: {file_tot_mutant_cnt}")
     print(f"Total selected mutants: {tot_mutant_cnt}")
 
+    return files2mutants
 
-
-
-        
-        # break
-
-
-
-
-
-        
-
-
-    
-    
 
 
 def get_lines_executed_by_failing_tcs(version_dir, target_code_file_path, buggy_lineno, target_files):
@@ -239,196 +231,6 @@ def get_buggy_code_file(version_dir, buggy_code_filename):
     assert buggy_code_file.exists(), f"Buggy code file {buggy_code_file} does not exist"
 
     return buggy_code_file
-
-
-
-def generate_mutants(
-        configs, core_working_dir, version_name, 
-        target_code_file_path, buggy_code_file, 
-        music, version_dir, lines_executed_by_failing_tc):
-
-    # --- prepare needed directories
-    select_mutant_num = configs['num_mutant_per_line']
-    worksTodo = intitiate_mutants_dir(core_working_dir, version_name, configs['target_files'])
-
-    # --- start generating mutants
-    # 1. Make patch file
-    patch_file = make_patch_file(target_code_file_path, buggy_code_file, core_working_dir)
-
-    # 2. Apply patch
-    apply_patch(target_code_file_path, buggy_code_file, patch_file, core_working_dir, False)
-
-    # 3. clean Execute configure and Build the subject, if build fails, skip the mutant
-    res = execute_clean_script(configs[build_sh_wd_key], core_working_dir)
-    # if res != 0:
-    #     print('Failed to clean on {}'.format(version_name))
-    #     apply_patch(target_code_file_path, buggy_code_file, patch_file, core_working_dir, True)
-    #     exit(1)
-
-    res = execute_configure_script(configs[config_sh_wd_key], core_working_dir)
-    if res != 0:
-        print('Failed to configure on {}'.format(version_name))
-        apply_patch(target_code_file_path, buggy_code_file, patch_file, core_working_dir, True)
-        exit(1)
-    
-    res = execute_build_script(configs[build_sh_wd_key], core_working_dir)
-    if res != 0:
-        print('Failed to build on {}'.format(version_name))
-        apply_patch(target_code_file_path, buggy_code_file, patch_file, core_working_dir, True)
-        exit(1)
-    
-    # 4. get compile command
-    compile_command = core_working_dir / configs['compile_command_path']
-    assert compile_command.exists(), f"Compile command {compile_command} does not exist"
-
-    # 5. generate mutants
-    # target_file: libxml2/parser.c
-    # key file: HTMLparser.c#htmlnamePush(htmlParserCtxtPtr ctxt, const xmlChar * value)#151
-    for target_file, output_dir in worksTodo:
-        filename = target_file.name
-        lines = lines_executed_by_failing_tc[filename]
-        if len(lines) == 0:
-            print(f"No lines executed by failing test cases for {filename}")
-            continue
-        gen_mutants_work(target_file, output_dir, compile_command, select_mutant_num, music, lines)
-    
-    # 7. Apply patch reverse
-    apply_patch(target_code_file_path, buggy_code_file, patch_file, core_working_dir, True)
-
-    # 6. Show statistics
-    show_statistics(worksTodo)
-
-
-def show_statistics(worksTodo):
-    total_mutant_cnt = 0
-    mutant_cnt_per_file = {}
-
-    for target_file, output_dir in worksTodo:
-        mutant_files = list(output_dir.glob('*.c'))
-        mutant_cnt = len(mutant_files)
-        total_mutant_cnt += mutant_cnt
-        mutant_cnt_per_file[target_file] = mutant_cnt
-    
-    print(f'\n\n> Total mutants generated: {total_mutant_cnt}')
-    print('>Mutants per file:')
-    for target_file, mutant_cnt in mutant_cnt_per_file.items():
-        print(f'{target_file.name}: {mutant_cnt}')
-
-
-
-def gen_mutants_work(target_file, output_dir, compile_command, select_mutant_num, music_cmd, lines):
-    global not_using_operators
-    unused_ops = ','.join(not_using_operators)
-    execed_lines = ','.join(lines)
-
-    cmd = [
-        music_cmd,
-        str(target_file),
-        '-o', str(output_dir),
-        '-ll', str(select_mutant_num),
-        '-l', '2',
-        '-d', unused_ops,
-        '-i', execed_lines,
-        '-p', str(compile_command)
-    ]
-    print(f'Generating mutants for {target_file.name}...')
-    res = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE)
-    if res.returncode != 0:
-        raise Exception(f'Failed to generate mutants for {target_file.name}')
-    
-    print(f'Finished generating mutants for {target_file.name}')
-
-
-def intitiate_mutants_dir(core_working_dir, version_name, target_files):
-    mutants_dir = core_working_dir / 'generated_mutants'
-    mutants_dir.mkdir(exist_ok=True, parents=True)
-
-    version_mutants_dir = mutants_dir / version_name
-    version_mutants_dir.mkdir(exist_ok=True)
-
-    target_file_pair = []
-
-    for target_file in target_files:
-        target_file_path = core_working_dir / Path(target_file)
-        assert target_file_path.exists(), f'{target_file_path} does not exist'
-
-        target_file_name = target_file.replace('/', '-')
-        single_file_mutant_dir = version_mutants_dir / f"{target_file_name}"
-        single_file_mutant_dir.mkdir(exist_ok=True, parents=True)
-
-        target_file_pair.append((target_file_path, single_file_mutant_dir))
-    
-    return target_file_pair
-
-def make_patch_file(target_code_file_path, buggy_code_file, core_working_dir):
-    patch_file = core_working_dir / f"buggy_version.patch"
-
-    target_file = core_working_dir / target_code_file_path
-    assert target_file.exists(), f"Target file {target_file} does not exist"
-
-    cmd = ['diff', target_file.__str__(), buggy_code_file.__str__()]
-    sp.run(cmd, stdout=patch_file.open('w'))
-    
-    return patch_file
-
-def apply_patch(target_code_file_path, buggy_code_file, patch_file, core_working_dir, revert=False):
-    target_file = core_working_dir / target_code_file_path
-    assert target_file.exists(), f"Target file {target_file} does not exist"
-
-    cmd = ['patch']
-    if revert:
-        cmd.append('-R')
-    cmd.extend(['-i', patch_file.__str__(), target_file.__str__()])
-
-    res = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE)
-    if res.returncode != 0:
-        raise Exception(f'Failed to apply patch to {target_file.name} with buggy_version {buggy_code_file.name}')
-    
-    print(f'Applied patch to {target_file.name} with buggy_version {buggy_code_file.name} : revert={revert}')
-
-
-def execute_clean_script(clean_sh_wd, core_working_dir):
-    global clean_script
-
-    clean_sh_wd = core_working_dir / clean_sh_wd
-    clean_sh = clean_sh_wd / clean_script
-    assert clean_sh.exists(), f"Clean script {clean_sh} does not exist"
-
-    cmd = ['bash', clean_sh]
-    res = sp.run(cmd, cwd=clean_sh_wd, stdout=sp.PIPE, stderr=sp.PIPE)
-    
-    print('Executed clean script')
-
-    return res.returncode
-
-
-def execute_configure_script(config_sh_wd, core_working_dir):
-    global configure_no_cov_script
-
-    config_sh_wd = core_working_dir / config_sh_wd
-    config_sh = config_sh_wd / configure_no_cov_script
-    assert config_sh.exists(), f"Configure script {config_sh} does not exist"
-
-    cmd = ['bash', config_sh]
-    res = sp.run(cmd, cwd=config_sh_wd, stdout=sp.PIPE, stderr=sp.PIPE)
-    
-    print('Executed configure script')
-
-    return res.returncode
-
-def execute_build_script(build_sh_wd, core_working_dir):
-    global build_script
-
-    build_sh_wd = core_working_dir / build_sh_wd
-    build_sh = build_sh_wd / build_script
-    assert build_sh.exists(), f"Build script {build_sh} does not exist"
-
-    cmd = ['bash', build_script]
-    res = sp.run(cmd, cwd=build_sh_wd, stdout=sp.PIPE, stderr=sp.PIPE)
-
-    print(f"Build script executed: {res.returncode}")
-    
-    return res.returncode
 
 
 

@@ -65,11 +65,13 @@ def extract_mbfl_features(configs, core_working_dir, worker_name, assigned_versi
     assert subj_name == subject_name, f"Subject name mismatch: {subj_name} != {subject_name}"
 
     generate_mutants = '01-2_generate_mutants.py'
-    select_mutants = '01-4_select_mutants.py'
+    select_mutants = '01-3_select_mutants.py'
+    test_mutants = '01-4_test_mutants.py'
     measure_mbfl_features = '01-5_measure_mbfl_features.py'
 
     for target_version in assigned_versions_list:
         version_name = target_version.name
+
         print(f">> Working on version: {version_name}\n")
 
         # 1. generate mutants
@@ -83,8 +85,41 @@ def extract_mbfl_features(configs, core_working_dir, worker_name, assigned_versi
         if res.returncode != 0:
             raise Exception('Failed to execute generate mutants script')
 
-        #. Apply buggy version code
-    pass
+        # 2. select mutants
+        cmd = [
+            'python3', select_mutants,
+            '--subject', subject_name,
+            '--worker', worker_name,
+            '--version', version_name
+        ]
+        res = sp.run(cmd)
+        if res.returncode != 0:
+            raise Exception('Failed to execute select mutants script')
+        
+        # 3. test mutants
+        cmd = [
+            'python3', test_mutants,
+            '--subject', subject_name,
+            '--worker', worker_name,
+            '--version', version_name
+        ]
+        res = sp.run(cmd)
+        if res.returncode != 0:
+            raise Exception('Failed to execute test mutants script')
+        
+        # 4. measure mbfl features
+        cmd = [
+            'python3', measure_mbfl_features,
+            '--subject', subject_name,
+            '--worker', worker_name,
+            '--version', version_name
+        ]
+        res = sp.run(cmd)
+        if res.returncode != 0:
+            raise Exception('Failed to execute measure mbfl features script')
+        
+        print(f">> Finished working on version: {version_name}\n")
+
 
 def get_assigned_buggy_versions(configs, core_working_dir):
     assigned_buggy_versions = core_working_dir / 'assigned_buggy_versions'
@@ -96,46 +131,6 @@ def get_assigned_buggy_versions(configs, core_working_dir):
     print(f"Total assigned buggy versions: {len(assigned_versions_list)}")
 
     return assigned_versions_list
-
-
-def configure_and_build(configs, subject_working_dir):
-    # Execute configure script
-    execute_configure_script(configs[config_sh_wd_key], subject_working_dir)
-
-    # Execute build script
-    execute_build_script(configs[build_sh_wd_key], subject_working_dir)
-
-
-
-def execute_configure_script(config_sh_wd, subject_working_dir):
-    global configure_no_cov_script
-
-    config_sh_wd = subject_working_dir / config_sh_wd
-    config_sh = config_sh_wd / configure_no_cov_script
-    assert config_sh.exists(), f"Configure script {config_sh} does not exist"
-
-    cmd = ['bash', config_sh]
-    res = sp.run(cmd, cwd=config_sh_wd)
-    if res.returncode != 0:
-        raise Exception('Failed to execute configure script')
-    
-    print('Executed configure script')
-
-def execute_build_script(build_sh_wd, subject_working_dir):
-    global build_script
-
-    build_sh_wd = subject_working_dir / build_sh_wd
-    build_sh = build_sh_wd / build_script
-    assert build_sh.exists(), f"Build script {build_sh} does not exist"
-
-    cmd = ['bash', build_script]
-    res = sp.run(cmd, cwd=build_sh_wd)
-    if res.returncode != 0:
-        raise Exception('Failed to execute build script')
-    
-    print('Executed build script')
-
-
 
 
 def read_configs(subject_name, subject_working_dir):

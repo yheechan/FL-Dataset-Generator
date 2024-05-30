@@ -84,6 +84,7 @@ def start_process(subject_name, worker_name, version_name):
 
 
     # 6. get lines executed by failing test cases per target files
+    # IT ALSO VALIDATES THE LINES EXECUTED BY FAILING TC CONTAINS THE BUGGY LINE
     lines_executed_by_failing_tc = get_lines_executed_by_failing_tcs(version_dir, target_code_file_path, buggy_lineno, configs['target_files'])
     print(f"Lines executed by failing test cases:")
     for target_file, lines in lines_executed_by_failing_tc.items():
@@ -270,7 +271,7 @@ def intitiate_mutants_dir(core_working_dir, version_name, target_files):
     return target_file_pair
 
 def make_patch_file(target_code_file_path, buggy_code_file, core_working_dir):
-    patch_file = core_working_dir / f"buggy_version.patch"
+    patch_file = core_working_dir / f"buggy.patch"
 
     target_file = core_working_dir / target_code_file_path
     assert target_file.exists(), f"Target file {target_file} does not exist"

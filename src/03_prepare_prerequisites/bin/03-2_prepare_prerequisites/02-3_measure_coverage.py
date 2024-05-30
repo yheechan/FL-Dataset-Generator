@@ -65,7 +65,7 @@ def start_process(subject_name, worker_name, version_name):
     # print(f"Buggy line number: {buggy_lineno}")
     assert version_name == buggy_code_filename, f"Version name {version_name} does not match with buggy code filename {buggy_code_filename}"
 
-    # 3. get failing tc list (ex, TC1, TC2, ...)
+    # 3. get failing tc list (ex, TC1.sh, TC2.sh, ...)
     failing_tc_list = get_tcs(version_dir, 'failing_tcs.txt')
     print(f"Total failing test cases: {len(failing_tc_list)}")
     passing_tc_list = get_tcs(version_dir, 'passing_tcs.txt')

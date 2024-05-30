@@ -216,8 +216,8 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
             bash_file.write("wait\n")
         
         # 4. create directory for per_mutant_info
-        per_mutant_info_dir = f"{workers_dir}{machine_id}/{core_id}/per_mutant_info/"
-        cmd = 'ssh {} \"mkdir -p {}" & \n'.format(machine_id, per_mutant_info_dir)
+        mutant_data_dir = f"{workers_dir}{machine_id}/{core_id}/mutant_data/"
+        cmd = 'ssh {} \"mkdir -p {}" & \n'.format(machine_id, mutant_data_dir)
         bash_file.write(cmd)
 
         cnt += 1
@@ -253,8 +253,8 @@ def initialize_directories_single_machine(configs, subject_working_dir, distribu
         buggy_mutant_dir = workers_dir / f"{machine_id}/{core_id}" / 'generated_mutants'
         buggy_mutant_dir.mkdir(exist_ok=True, parents=True)
 
-        per_mutant_info_dir = workers_dir / f"{machine_id}/{core_id}" / 'per_mutant_info'
-        per_mutant_info_dir.mkdir(exist_ok=True, parents=True)
+        mutant_data_dir = workers_dir / f"{machine_id}/{core_id}" / 'mutant_data'
+        mutant_data_dir.mkdir(exist_ok=True, parents=True)
         
 
 def distribute_buggy_versions_to_workers(configs, subject_working_dir, distribution_machineCore2bugsList):
