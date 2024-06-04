@@ -81,16 +81,10 @@ def start_process(subject_name, worker_name, version_name):
     selected_fileline2mutants = select_mutants(configs, core_working_dir, version_name, version_dir, lines_executed_by_failing_tc, subject_name)
 
     # 8. write selected mutants to a file
-    write_selected_mutants(core_working_dir, version_name, selected_fileline2mutants)
+    write_selected_mutants(version_dir, selected_fileline2mutants)
 
-def write_selected_mutants(core_working_dir, version_name, selected_fileline2mutants):
-    mutant_data_dir = core_working_dir / 'mutant_data'
-    mutant_data_dir.mkdir(exist_ok=True)
-
-    version_mutant_dir = mutant_data_dir / version_name
-    version_mutant_dir.mkdir(exist_ok=True)
-
-    selected_mutants_file = version_mutant_dir / 'selected_mutants.csv'
+def write_selected_mutants(version_dir, selected_fileline2mutants):
+    selected_mutants_file = version_dir / 'selected_mutants.csv'
     mutant_cnt = 1
     with selected_mutants_file.open('w') as f:
         f.write(",,,,,Before Mutation,,,,,After Mutation\n")

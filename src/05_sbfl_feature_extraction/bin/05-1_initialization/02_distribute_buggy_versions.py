@@ -11,10 +11,10 @@ import multiprocessing
 script_path = Path(__file__).resolve()
 initialization_dir = script_path.parent
 bin_dir = initialization_dir.parent
-mbfl_feature_extraction_dir = bin_dir.parent
+sbfl_feature_extraction_dir = bin_dir.parent
 
 # General directories
-src_dir = mbfl_feature_extraction_dir.parent
+src_dir = sbfl_feature_extraction_dir.parent
 root_dir = src_dir.parent
 user_configs_dir = root_dir / 'user_configs'
 subjects_dir = root_dir / 'subjects'
@@ -41,9 +41,9 @@ def main():
 
 
 def start_process(subject_name):
-    global configure_json_file, mbfl_feature_extraction_dir
+    global configure_json_file, sbfl_feature_extraction_dir
 
-    subject_working_dir = mbfl_feature_extraction_dir / f"{subject_name}-working_directory"
+    subject_working_dir = sbfl_feature_extraction_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
     # 1. Read configurations
@@ -168,9 +168,9 @@ def initialize_directories(configs, subject_working_dir, distribution_machineCor
 def initialize_directories_distributed_machines(configs, subject_working_dir, distribution_machineCore2bugsList):
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-mbfl_feature_extraction/"
+    base_dir = f"{home_directory}{subject_name}-sbfl_feature_extraction/"
     subject_working_dir = base_dir + f"{subject_name}-working_directory/"
-    workers_dir = subject_working_dir + 'workers_extracting_mbfl_features/'
+    workers_dir = subject_working_dir + 'workers_extracting_sbfl_features/'
 
 
     bash_file = open('02-1_initiate_directory.sh', 'w')
@@ -203,27 +203,6 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
         if cnt % laps == 0:
             bash_file.write("sleep 0.5s\n")
             bash_file.write("wait\n")
-
-        
-        # 3. create directory for generated mutants
-        coverage_dir = f"{workers_dir}{machine_id}/{core_id}/generated_mutants/"
-        cmd = 'ssh {} \"mkdir -p {}" & \n'.format(machine_id, coverage_dir)
-        bash_file.write(cmd)
-
-        cnt += 1
-        if cnt % laps == 0:
-            bash_file.write("sleep 0.5s\n")
-            bash_file.write("wait\n")
-        
-        # # 4. create directory for per_mutant_info
-        # mutant_data_dir = f"{workers_dir}{machine_id}/{core_id}/mutant_data/"
-        # cmd = 'ssh {} \"mkdir -p {}" & \n'.format(machine_id, mutant_data_dir)
-        # bash_file.write(cmd)
-
-        # cnt += 1
-        # if cnt % laps == 0:
-        #     bash_file.write("sleep 0.5s\n")
-        #     bash_file.write("wait\n")
     
     bash_file.write('echo ssh done, waiting...\n')
     bash_file.write('date\n')
@@ -249,13 +228,7 @@ def initialize_directories_single_machine(configs, subject_working_dir, distribu
         core_id = machine_core.split(':')[1]
         machine_core_dir = workers_dir / f"{machine_id}/{core_id}" / 'assigned_buggy_versions'
         machine_core_dir.mkdir(exist_ok=True, parents=True)
-        
-        buggy_mutant_dir = workers_dir / f"{machine_id}/{core_id}" / 'generated_mutants'
-        buggy_mutant_dir.mkdir(exist_ok=True, parents=True)
 
-        # mutant_data_dir = workers_dir / f"{machine_id}/{core_id}" / 'mutant_data'
-        # mutant_data_dir.mkdir(exist_ok=True, parents=True)
-        
 
 def distribute_buggy_versions_to_workers(configs, subject_working_dir, distribution_machineCore2bugsList):
     global use_distributed_machines
@@ -268,9 +241,9 @@ def distribute_buggy_versions_to_workers(configs, subject_working_dir, distribut
 def distribute_buggy_versions_to_workers_distributed_machines(configs, subject_working_dir, distribution_machineCore2bugsList):
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-mbfl_feature_extraction/"
+    base_dir = f"{home_directory}{subject_name}-sbfl_feature_extraction/"
     machine_working_dir = base_dir + f'{subject_name}-working_directory/'
-    workers_dir = machine_working_dir + 'workers_extracting_mbfl_features/'
+    workers_dir = machine_working_dir + 'workers_extracting_sbfl_features/'
 
 
     bash_file = open('02-2_distribute_buggy_versions.sh', 'w')

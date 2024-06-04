@@ -72,7 +72,7 @@ def start_process(subject_name, worker_name, version_name):
     # key: target_filename (ex. parser.c)
     # value: lineno (dict) -> list of mutants (ex. 123)
     # list of mutants: mutant_id, mutant_name (ex. mutant_12, parser.MUT123.c)
-    selected_mutants = get_selected_mutants(core_working_dir, version_name)
+    selected_mutants = get_selected_mutants(version_dir)
     for target_file, lineno_mutants in selected_mutants.items():
         mutant_cnt = 0
         for lineno, mutants in lineno_mutants.items():
@@ -90,7 +90,10 @@ def start_process(subject_name, worker_name, version_name):
         print(f"{key} test cases: {len(tcs)}")
 
     # 5. Initiate version results csv file
-    result_csv = core_working_dir / 'mutant_data' / version_name / 'mutation_testing_results.csv'
+    # result_csv = core_working_dir / 'mutant_data' / version_name / 'mutation_testing_results.csv'
+    # result_csv_file = result_csv.open('w')
+    # result_csv_file.write("target_file,mutant_id,lineno,build_result,p2f,p2p,f2p,f2f\n")
+    result_csv = version_dir / 'mutation_testing_results.csv'
     result_csv_file = result_csv.open('w')
     result_csv_file.write("target_file,mutant_id,lineno,build_result,p2f,p2p,f2p,f2f\n")
 
@@ -285,8 +288,8 @@ def get_tcs(version_dir, tc_file):
     return tcs_list
 
 
-def get_selected_mutants(core_working_dir, version_name):
-    get_selected_mutants = core_working_dir / 'mutant_data' / version_name / 'selected_mutants.csv'
+def get_selected_mutants(version_dir):
+    get_selected_mutants = version_dir / 'selected_mutants.csv'
     assert get_selected_mutants.exists(), f"Selected mutants file {get_selected_mutants} does not exist"
 
     selected_mutants = {}

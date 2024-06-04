@@ -61,7 +61,7 @@ def start_process(subject_name):
     distribution_machineCore2bugsList = assign_buggy_versions(configs, subject_working_dir, buggy_versions, machine_cores_list)
 
     # # 5. initialize directory for each machine-core
-    initialize_directories(configs, subject_working_dir, distribution_machineCore2bugsList)
+    # initialize_directories(configs, subject_working_dir, distribution_machineCore2bugsList)
 
     # # 6. distribute mutants to each machine-core
     distribute_buggy_versions_to_workers(configs, subject_working_dir, distribution_machineCore2bugsList)
@@ -215,15 +215,15 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
             bash_file.write("sleep 0.5s\n")
             bash_file.write("wait\n")
         
-        # # 4. create directory for per_mutant_info
-        # mutant_data_dir = f"{workers_dir}{machine_id}/{core_id}/mutant_data/"
-        # cmd = 'ssh {} \"mkdir -p {}" & \n'.format(machine_id, mutant_data_dir)
-        # bash_file.write(cmd)
+        # 4. create directory for per_mutant_info
+        mutant_data_dir = f"{workers_dir}{machine_id}/{core_id}/mutant_data/"
+        cmd = 'ssh {} \"mkdir -p {}" & \n'.format(machine_id, mutant_data_dir)
+        bash_file.write(cmd)
 
-        # cnt += 1
-        # if cnt % laps == 0:
-        #     bash_file.write("sleep 0.5s\n")
-        #     bash_file.write("wait\n")
+        cnt += 1
+        if cnt % laps == 0:
+            bash_file.write("sleep 0.5s\n")
+            bash_file.write("wait\n")
     
     bash_file.write('echo ssh done, waiting...\n')
     bash_file.write('date\n')
@@ -253,8 +253,8 @@ def initialize_directories_single_machine(configs, subject_working_dir, distribu
         buggy_mutant_dir = workers_dir / f"{machine_id}/{core_id}" / 'generated_mutants'
         buggy_mutant_dir.mkdir(exist_ok=True, parents=True)
 
-        # mutant_data_dir = workers_dir / f"{machine_id}/{core_id}" / 'mutant_data'
-        # mutant_data_dir.mkdir(exist_ok=True, parents=True)
+        mutant_data_dir = workers_dir / f"{machine_id}/{core_id}" / 'mutant_data'
+        mutant_data_dir.mkdir(exist_ok=True, parents=True)
         
 
 def distribute_buggy_versions_to_workers(configs, subject_working_dir, distribution_machineCore2bugsList):
@@ -273,17 +273,28 @@ def distribute_buggy_versions_to_workers_distributed_machines(configs, subject_w
     workers_dir = machine_working_dir + 'workers_extracting_mbfl_features/'
 
 
-    bash_file = open('02-2_distribute_buggy_versions.sh', 'w')
+    bash_file = open('xx.sh', 'w')
     bash_file.write('date\n')
     cnt = 0
     laps = 100
     for machine_core, buggy_versions_list in distribution_machineCore2bugsList.items():
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
+        core_dir = f"{workers_dir}{machine_id}/{core_id}/"
         machineCore_assigned_dir = f"{workers_dir}{machine_id}/{core_id}/assigned_buggy_versions/"
 
         for buggy_version_dir in buggy_versions_list:
-            cmd = 'scp -r {} {}:{} & \n'.format(buggy_version_dir, machine_id, machineCore_assigned_dir)
+            bug_name = buggy_version_dir.name
+
+            cmd = 'ssh {} \"cp {}mutant_data/{}/selected_mutants.csv {}{}\" & \n'.format(machine_id, core_dir, bug_name, machineCore_assigned_dir, bug_name)
+            bash_file.write(f"{cmd}")
+        
+            cnt += 1
+            if cnt % laps == 0:
+                bash_file.write("sleep 0.2s\n")
+                bash_file.write("wait\n")
+
+            cmd = 'ssh {} \"cp {}mutant_data/{}/mutation_testing_results.csv {}{}\" & \n'.format(machine_id, core_dir, bug_name, machineCore_assigned_dir, bug_name)
             bash_file.write(f"{cmd}")
         
             cnt += 1
@@ -296,12 +307,12 @@ def distribute_buggy_versions_to_workers_distributed_machines(configs, subject_w
     bash_file.write('wait\n')
     bash_file.write('date\n')
     
-    cmd = ['chmod', '+x', '02-2_distribute_buggy_versions.sh']
+    cmd = ['chmod', '+x', 'xx.sh']
     res = sp.call(cmd)
 
     # time.sleep(1)
 
-    # cmd = ['./02-2_distribute_buggy_versions.sh']
+    # cmd = ['./xx.sh']
     # print("Distributing mutants to workers...")
     # res = sp.call(cmd)
 

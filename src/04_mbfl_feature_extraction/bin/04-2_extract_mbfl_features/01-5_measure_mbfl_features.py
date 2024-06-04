@@ -63,7 +63,7 @@ def start_process(subject_name, worker_name, version_name):
     lines = get_lines_from_postprocessed_coverage(version_dir)
 
     # 3. get mbfl features of individual lines to mutants
-    perfileline_features, total_p2f, total_f2p = get_perfileline_features(core_working_dir, version_name)
+    perfileline_features, total_p2f, total_f2p = get_perfileline_features(version_dir)
 
     # 4. get test cases
     failing_tc_list = get_tcs(version_dir, 'failing_tcs.txt')
@@ -81,18 +81,41 @@ def start_process(subject_name, worker_name, version_name):
     )
 
 
-    # 6. get buggy line key
+    # 7. get buggy line key
     buggy_line_key = get_buggy_line_key(version_dir)
 
+    # 8. process to csv
     process2csv(version_dir, mbfl_features, lines, buggy_line_key, max_mutants, total_num_failing_tcs)
 
+    # 9. zip the generated_mutant/<version-name> directory as <versoin-name>.zip
+    zip_mutant_dir(core_working_dir, version_name)
 
-    # # 2. get bug_info
-    # target_code_file_path, buggy_code_filename, buggy_lineno = get_bug_info(version_dir)
-    # # print(f"Target code file: {target_code_file_path}")
-    # # print(f"Buggy code filename: {buggy_code_filename}")
-    # # print(f"Buggy line number: {buggy_lineno}")
-    # assert version_name == buggy_code_filename, f"Version name {version_name} does not match with buggy code filename {buggy_code_filename}"
+
+def zip_mutant_dir(core_working_dir, version_name):
+    mutants_dir = core_working_dir / 'generated_mutants'
+    assert mutants_dir.exists(), f"Mutants directory {mutants_dir} does not exist"
+
+    zip_file = mutants_dir / f"{version_name}.zip"
+    if zip_file.exists():
+        os.remove(zip_file)
+    
+    res = sp.run(['zip', '-r', f'{version_name}.zip', version_name], cwd=mutants_dir, stdout=sp.PIPE, stderr=sp.PIPE)
+    if res.returncode != 0:
+        raise Exception(f"Failed to zip the directory {version_name}")
+    
+    print(f"Zipped the directory {version_name} as {version_name}.zip")
+
+    # remove the directory
+    res = sp.run(['rm', '-rf', version_name], cwd=mutants_dir)
+    if res.returncode != 0:
+        raise Exception(f"Failed to remove the directory {version_name}")
+    
+    print(f"Removed the directory {version_name} from generated_mutants directory")
+
+
+
+
+
 def process2csv(version_dir, mbfl_features, lines, buggy_line_key, max_mutants, total_num_failing_tcs):
 
     csv_file = version_dir / 'mbfl_features.csv'
@@ -272,8 +295,8 @@ def get_buggy_line_key(version_dir):
         line = f.readline().strip()
         return line
 
-def get_perfileline_features(core_working_dir, version_name):
-    mutation_testing_result_file = core_working_dir / 'mutant_data' / version_name / 'mutation_testing_results.csv'
+def get_perfileline_features(version_dir):
+    mutation_testing_result_file = version_dir / 'mutation_testing_results.csv'
     assert mutation_testing_result_file.exists(), f"Mutation testing result file {mutation_testing_result_file} does not exist"
 
     perfileline_features = {}
