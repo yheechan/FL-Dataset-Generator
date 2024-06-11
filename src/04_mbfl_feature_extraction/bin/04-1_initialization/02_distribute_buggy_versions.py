@@ -283,6 +283,9 @@ def distribute_buggy_versions_to_workers_distributed_machines(configs, subject_w
         machineCore_assigned_dir = f"{workers_dir}{machine_id}/{core_id}/assigned_buggy_versions/"
 
         for buggy_version_dir in buggy_versions_list:
+            # bug_name = buggy_version_dir.name
+            # buggy_version_dir = buggy_version_dir / 'coverage_summary.csv'
+            # new_position = machineCore_assigned_dir + bug_name + '/'
             cmd = 'scp -r {} {}:{} & \n'.format(buggy_version_dir, machine_id, machineCore_assigned_dir)
             bash_file.write(f"{cmd}")
         

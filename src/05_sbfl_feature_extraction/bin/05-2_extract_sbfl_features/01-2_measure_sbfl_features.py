@@ -171,8 +171,8 @@ def initialize_spectrums_per_line(lines, buggy_line_key, failing_tc_list, passin
         ep, np = calculate_spectrum(line, passing_tc_list)
 
         # VALIDATE: sum of executed and not executed test cases should be equal to total number of test cases
-        assert ef + ep == len(failing_tc_list), f"Sum of executed test cases {ef} and not executed test cases {ep} should be equal to total number of failing test cases {len(failing_tc_list)}"
-        assert nf + np == len(passing_tc_list), f"Sum of executed test cases {nf} and not executed test cases {np} should be equal to total number of passing test cases {len(passing_tc_list)}"
+        assert ef + nf == len(failing_tc_list), f"Sum of executed test cases {ef} and not executed test cases {ep} should be equal to total number of failing test cases {len(failing_tc_list)}"
+        assert ep + np == len(passing_tc_list), f"Sum of executed test cases {nf} and not executed test cases {np} should be equal to total number of passing test cases {len(passing_tc_list)}"
 
         spectrums_per_line.append({
             'key': line_key,
@@ -188,7 +188,7 @@ def calculate_spectrum(line, tc_list):
 
     for tc in tc_list:
         tc_name = tc.split('.')[0]
-        if line[tc_name] == 1:
+        if line[tc_name] == '1':
             executed += 1
         else:
             not_executed += 1
@@ -211,14 +211,16 @@ def get_lines_from_postprocessed_coverage(version_dir, buggy_line_key, failing_t
 
     tc_list = failing_tc_list + passing_tc_list
 
+    print(f"version_dir: {version_dir.name}")
+
     cov_per_line = []
     check_tc_col = True
     buggy_line_exists = False
     with open(cov_data_csv, 'r') as csv_fp:
-        csv_reader = csv.reader(csv_fp)
-        next(csv_reader)
+        csv_reader = csv.DictReader(csv_fp)
+        # next(csv_reader)
         for row in csv_reader:
-            line_key = row['key']
+            line_key = row['key'] # first column is line key
 
             # VALIDATE: postprocessed coverage data has buggy line key
             if line_key == buggy_line_key:
@@ -233,6 +235,10 @@ def get_lines_from_postprocessed_coverage(version_dir, buggy_line_key, failing_t
                     if tc_name not in row:
                         raise Exception(f"Test case {tc_name} is not found in postprocessed coverage data")
                 check_tc_col = False
+    
+    assert buggy_line_exists, f"Buggy line key {buggy_line_key} is not found in postprocessed coverage data"
+    
+    return cov_per_line
 
 
 def custome_sort(tc_script):

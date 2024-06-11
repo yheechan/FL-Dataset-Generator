@@ -72,9 +72,9 @@ def get_buggy_versions(subject_name):
     global src_dir
     
     # copy usable buggy versions directory to working directory
-    prepare_prerequisites_dir = src_dir / '03_prepare_prerequisites'
-    subject_working_dir = prepare_prerequisites_dir / f'{subject_name}-working_directory'
-    buggy_versions_dir = subject_working_dir / 'prerequisite_data'
+    mbfl_feature_extraction_dir = src_dir / '04_mbfl_feature_extraction'
+    subject_working_dir = mbfl_feature_extraction_dir / f'{subject_name}-working_directory'
+    buggy_versions_dir = subject_working_dir / 'mbfl_features'
     assert buggy_versions_dir.exists(), 'Buggy versions directory does not exist'
 
     buggy_versions = []
@@ -220,7 +220,7 @@ def initialize_directories_distributed_machines(configs, subject_working_dir, di
 
 def initialize_directories_single_machine(configs, subject_working_dir, distribution_machineCore2bugsList):
 
-    workers_dir = subject_working_dir / 'workers_extracting_mbfl_features'
+    workers_dir = subject_working_dir / 'workers_extracting_sbfl_features'
     workers_dir.mkdir(exist_ok=True)
 
     for machine_core, buggy_version_list in distribution_machineCore2bugsList.items():
@@ -280,7 +280,7 @@ def distribute_buggy_versions_to_workers_distributed_machines(configs, subject_w
 
 
 def distribute_buggy_versions_to_workers_single_machine(configs, subject_working_dir, distribution_machineCore2bugsList):
-    workers_dir = subject_working_dir / 'workers_extracting_mbfl_features'
+    workers_dir = subject_working_dir / 'workers_extracting_sbfl_features'
 
     for machine_core, buggy_versions_list in distribution_machineCore2bugsList.items():
         machine_id = machine_core.split(':')[0]

@@ -90,14 +90,34 @@ def start_process(subject_name, worker_name, version_name):
     for target_file, lines in lines_executed_by_failing_tc.items():
         print(f"{target_file}: {len(lines)}")
 
+    version_name_zip = version_name + '.zip'
+    version_mutant_zip = core_working_dir / 'generated_mutants' / version_name_zip
 
-    # 7. conduct run tests on buggy version with failing test cases
-    generate_mutants(
-        configs, core_working_dir, version_name, 
-        target_code_file_path, buggy_code_file, 
-        music, version_dir, lines_executed_by_failing_tc
-    )
+    version_mutant_dir = core_working_dir / 'generated_mutants' / version_name
 
+    if not version_mutant_zip.exists() and not version_mutant_dir.exists():
+        # 7. conduct run tests on buggy version with failing test cases
+        generate_mutants(
+            configs, core_working_dir, version_name, 
+            target_code_file_path, buggy_code_file, 
+            music, version_dir, lines_executed_by_failing_tc
+        )
+    elif version_mutant_zip.exists() and not version_mutant_dir.exists():
+        # 7. unzip the mutants
+        unzip_mutants(version_mutant_zip, version_mutant_dir)
+    elif not version_mutant_zip.exists() and version_mutant_dir.exists():
+        print(f"Mutants for {version_name} already generated")
+
+
+def unzip_mutants(version_mutant_zip, version_mutant_dir):
+    cmd = ['unzip', version_mutant_zip]
+    res = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+    if res.returncode != 0:
+        raise Exception(f'Failed to unzip mutants for {version_mutant_zip.name}')
+    
+    print(f'Unzipped mutants for {version_mutant_zip.name}')
+
+    assert version_mutant_dir.exists(), f"Mutants directory {version_mutant_dir} does not exist"
 
 def get_lines_executed_by_failing_tcs(version_dir, target_code_file_path, buggy_lineno, target_files):
     lines_executed_by_failing_tc_file = version_dir / 'coverage_info/lines_executed_by_failing_tc.json'

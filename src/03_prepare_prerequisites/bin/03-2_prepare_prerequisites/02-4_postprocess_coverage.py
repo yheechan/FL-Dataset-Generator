@@ -38,6 +38,8 @@ coverage_summary = {
     '#_failing_tcs': 0,
     '#_passing_tcs': 0,
     '#_cc_tcs': 0,
+    '#_excluded_failing_tcs': 0,
+    '#_excluded_passing_tcs': 0,
     '#_excluded_tcs': 0,
     '#_total_utilized_tcs': 0,
     '#_lines_executed_by_failing_tcs': 0,
@@ -93,6 +95,14 @@ def start_process(subject_name, worker_name, version_name):
     ccts_list = get_tcs(version_dir, 'ccts.txt')
     coverage_summary['#_cc_tcs'] = len(ccts_list)
     print(f"Total cct test cases: {len(ccts_list)}")
+    
+    excluded_failing_tc_list = get_tcs(version_dir, 'excluded_failing_tcs.txt')
+    coverage_summary['#_excluded_failing_tcs'] = len(excluded_failing_tc_list)
+    print(f"Total excluded failing test cases: {len(excluded_failing_tc_list)}")
+
+    excluded_passing_tc_list = get_tcs(version_dir, 'excluded_passing_tcs.txt')
+    coverage_summary['#_excluded_passing_tcs'] = len(excluded_passing_tc_list)
+    print(f"Total excluded passing test cases: {len(excluded_passing_tc_list)}")
 
     excluded_tc_list = get_tcs(version_dir, 'excluded_tcs.txt')
     coverage_summary['#_excluded_tcs'] = len(excluded_tc_list)

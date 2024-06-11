@@ -54,7 +54,7 @@ def start_process(subject_name):
     machine_cores_list = get_machine_cores_list(configs, subject_working_dir)
 
     # 4. distribute config directory to each machine-core
-    distribute_mbfl_extraction_cmd(configs, subject_working_dir, machine_cores_list)
+    distribute_prerequisites_cmd(configs, subject_working_dir, machine_cores_list)
 
 
 def get_machine_cores_list(configs, subject_working_dir):
@@ -108,14 +108,14 @@ def get_from_local_machine(configs):
     return machine_cores_list
 
 
-def distribute_mbfl_extraction_cmd(configs, subject_working_dir, machine_cores_list):
+def distribute_prerequisites_cmd(configs, subject_working_dir, machine_cores_list):
     global use_distributed_machines
 
     if configs[use_distributed_machines] == True:
-        distribute_mbfl_extraction_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list)
+        distribute_prerequisites_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list)
 
 
-def distribute_mbfl_extraction_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list):
+def distribute_prerequisites_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list):
     global bin_dir
 
     home_directory = configs['home_directory']
@@ -124,10 +124,10 @@ def distribute_mbfl_extraction_cmd_distributed_machines(configs, subject_working
     machine_bin_dir = base_dir + 'bin/'
 
     # item being sent
-    test_versions_cmd_dir = bin_dir / '04-2_extract_mbfl_features'
+    test_versions_cmd_dir = bin_dir / '04-5_refine_testsuite'
     assert test_versions_cmd_dir.exists(), f"Test mutants directory {test_versions_cmd_dir} does not exist"
 
-    bash_file = open('05-1_distribute_extract_mbfl_features_cmd.sh', 'w')
+    bash_file = open('07-1_distribute_refine_testsuite_cmd.sh', 'w')
     bash_file.write('date\n')
     cnt = 0
     laps = 50
@@ -151,12 +151,12 @@ def distribute_mbfl_extraction_cmd_distributed_machines(configs, subject_working
     bash_file.write('wait\n')
     bash_file.write('date\n')
     
-    cmd = ['chmod', '+x', '05-1_distribute_extract_mbfl_features_cmd.sh']
+    cmd = ['chmod', '+x', '07-1_distribute_refine_testsuite_cmd.sh']
     res = sp.call(cmd)
 
     # time.sleep(1)
 
-    # cmd = ['./05-1_distribute_extract_mbfl_features_cmd.sh']
+    # cmd = ['./07-1_distribute_refine_testsuite_cmd.sh']
     # print("Distributing subject repository to workers...")
     # res = sp.call(cmd)
 

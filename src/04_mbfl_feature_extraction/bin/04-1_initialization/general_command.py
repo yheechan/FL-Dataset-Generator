@@ -10,6 +10,7 @@ distribute_repo = '03_distribute_repo.py'
 distribute_config = '04_distribute_config.py'
 distribute_mbfl_extraction_cmd = '05_distribute_mbfl_extraction_cmd.py'
 distribute_external_tools = '06_distribute_external_tools.py'
+distribute_refine_testsuite_cmd = '07_distribute_refine_testsuite_cmd.py'
 
 def main():
     parser = make_parser()
@@ -59,6 +60,13 @@ def start_process(subject_name):
     if res.returncode != 0:
         raise Exception('Failed to execute distribute external tools script')
     print('>> Distributed external tools')
+
+    # 7. distribute refine testsuite command
+    cmd = ['python3', distribute_refine_testsuite_cmd, '--subject', subject_name]
+    res = sp.run(cmd)
+    if res.returncode != 0:
+        raise Exception('Failed to execute distribute refine testsuite command script')
+    print('>> Distributed refine testsuite command')
 
     
 

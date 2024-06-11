@@ -10,8 +10,8 @@ import sys
 
 # Current working directory
 script_path = Path(__file__).resolve()
-mbfl_dataset_dir = script_path.parent
-bin_dir = mbfl_dataset_dir.parent
+refine_testsuite_dir = script_path.parent
+bin_dir = refine_testsuite_dir.parent
 mbfl_feature_extraction_dir = bin_dir.parent
 
 # General directories
@@ -38,6 +38,11 @@ copy_real_world_buggy_versions = 'copy_real_world_buggy_versions'
 # file names
 failing_txt = 'failing_tcs.txt'
 passing_txt = 'passing_tcs.txt'
+ccts_txt = 'ccts.txt'
+excluded_failing_txt = 'excluded_failing_tcs.txt'
+excluded_passing_txt = 'excluded_passing_tcs.txt'
+excluded_txt = 'excluded_tcs.txt'
+additional_failing_txt = 'additional_failing_tcs.txt'
 
 
 def main():
@@ -92,6 +97,13 @@ def start_analysis(configs, mbfl_features_per_bug):
 
         # GET: list of failing TCs
         failing_tcs = get_tcs(bug_dir, 'failing_tcs.txt')
+        passing_tcs = get_tcs(bug_dir, 'passing_tcs.txt')
+        ccts = get_tcs(bug_dir, 'ccts.txt')
+        excluded_failing_tcs = get_tcs(bug_dir, 'excluded_failing_tcs.txt')
+        excluded_passing_tcs = get_tcs(bug_dir, 'excluded_passing_tcs.txt')
+        excluded_tcs = get_tcs(bug_dir, 'excluded_tcs.txt')
+        additional_failing_tcs = get_tcs(bug_dir, 'additional_failing_tcs.txt')
+
 
         # GET: buggy line key
         buggy_line_key = get_buggy_line_key(bug_dir)
@@ -127,7 +139,13 @@ def start_analysis(configs, mbfl_features_per_bug):
             'bug_name': bug_name,
             'buggy_line_key': buggy_line_key,
 
-            '# of failing Tcs': len(failing_tcs),
+            '# of failing tcs': len(failing_tcs),
+            '# of passing tcs': len(passing_tcs),
+            '# of ccts': len(ccts),
+            '# of excluded failing tcs': len(excluded_failing_tcs),
+            '# of excluded passing tcs': len(excluded_passing_tcs),
+            '# of excluded tcs': len(excluded_tcs),
+            '# of additional failing tcs': len(additional_failing_tcs),
 
             '# of lines executed by failing TCs': len(lines_executed_by_failing_tcs),
             
@@ -193,7 +211,8 @@ def get_tcs(version_dir, tc_file):
     assert testsuite_info_dir.exists(), f"Testsuite info directory {testsuite_info_dir} does not exist"
 
     tc_file_txt = testsuite_info_dir / tc_file
-    assert tc_file_txt.exists(), f"Failing test cases file {tc_file_txt} does not exist"
+    if not tc_file_txt.exists():
+        return []
 
     tcs_list = []
 

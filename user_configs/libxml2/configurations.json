@@ -6,7 +6,7 @@
     "compile_command_path": "libxml2/compile_commands.json",
     "test_case_directory": "libxml2/testcases/",
     "subject_language": "C",
-    "use_distributed_machines": true,
+    "use_distributed_machines": false,
     "exclude_cct": true,
     "max_mutants": 5,
     "single_machine": {

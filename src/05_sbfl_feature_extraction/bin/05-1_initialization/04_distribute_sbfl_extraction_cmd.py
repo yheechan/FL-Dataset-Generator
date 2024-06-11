@@ -11,10 +11,10 @@ import multiprocessing
 script_path = Path(__file__).resolve()
 initialization_dir = script_path.parent
 bin_dir = initialization_dir.parent
-mbfl_feature_extraction_dir = bin_dir.parent
+sbfl_feature_extraction_dir = bin_dir.parent
 
 # General directories
-src_dir = mbfl_feature_extraction_dir.parent
+src_dir = sbfl_feature_extraction_dir.parent
 root_dir = src_dir.parent
 user_configs_dir = root_dir / 'user_configs'
 subjects_dir = root_dir / 'subjects'
@@ -41,9 +41,9 @@ def main():
 
 
 def start_process(subject_name):
-    global configure_json_file, mbfl_feature_extraction_dir
+    global configure_json_file, sbfl_feature_extraction_dir
 
-    subject_working_dir = mbfl_feature_extraction_dir / f"{subject_name}-working_directory"
+    subject_working_dir = sbfl_feature_extraction_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
     # 1. Read configurations
@@ -54,7 +54,7 @@ def start_process(subject_name):
     machine_cores_list = get_machine_cores_list(configs, subject_working_dir)
 
     # 4. distribute config directory to each machine-core
-    distribute_mbfl_extraction_cmd(configs, subject_working_dir, machine_cores_list)
+    distribute_sbfl_extraction_cmd(configs, subject_working_dir, machine_cores_list)
 
 
 def get_machine_cores_list(configs, subject_working_dir):
@@ -108,26 +108,26 @@ def get_from_local_machine(configs):
     return machine_cores_list
 
 
-def distribute_mbfl_extraction_cmd(configs, subject_working_dir, machine_cores_list):
+def distribute_sbfl_extraction_cmd(configs, subject_working_dir, machine_cores_list):
     global use_distributed_machines
 
     if configs[use_distributed_machines] == True:
-        distribute_mbfl_extraction_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list)
+        distribute_sbfl_extraction_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list)
 
 
-def distribute_mbfl_extraction_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list):
+def distribute_sbfl_extraction_cmd_distributed_machines(configs, subject_working_dir, machine_cores_list):
     global bin_dir
 
     home_directory = configs['home_directory']
     subject_name = configs['subject_name']
-    base_dir = f"{home_directory}{subject_name}-mbfl_feature_extraction/"
+    base_dir = f"{home_directory}{subject_name}-sbfl_feature_extraction/"
     machine_bin_dir = base_dir + 'bin/'
 
     # item being sent
-    test_versions_cmd_dir = bin_dir / '04-2_extract_mbfl_features'
+    test_versions_cmd_dir = bin_dir / '05-2_extract_sbfl_features'
     assert test_versions_cmd_dir.exists(), f"Test mutants directory {test_versions_cmd_dir} does not exist"
 
-    bash_file = open('05-1_distribute_extract_mbfl_features_cmd.sh', 'w')
+    bash_file = open('04-1_distribute_extract_sbfl_features_cmd.sh', 'w')
     bash_file.write('date\n')
     cnt = 0
     laps = 50
@@ -151,12 +151,12 @@ def distribute_mbfl_extraction_cmd_distributed_machines(configs, subject_working
     bash_file.write('wait\n')
     bash_file.write('date\n')
     
-    cmd = ['chmod', '+x', '05-1_distribute_extract_mbfl_features_cmd.sh']
+    cmd = ['chmod', '+x', '04-1_distribute_extract_sbfl_features_cmd.sh']
     res = sp.call(cmd)
 
     # time.sleep(1)
 
-    # cmd = ['./05-1_distribute_extract_mbfl_features_cmd.sh']
+    # cmd = ['./04-1_distribute_extract_sbfl_features_cmd.sh']
     # print("Distributing subject repository to workers...")
     # res = sp.call(cmd)
 

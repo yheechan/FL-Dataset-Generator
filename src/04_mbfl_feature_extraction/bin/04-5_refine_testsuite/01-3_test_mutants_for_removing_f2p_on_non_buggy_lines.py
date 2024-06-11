@@ -72,7 +72,7 @@ def start_process(subject_name, worker_name, version_name):
     # key: target_filename (ex. parser.c)
     # value: lineno (dict) -> list of mutants (ex. 123)
     # list of mutants: mutant_id, mutant_name (ex. mutant_12, parser.MUT123.c)
-    selected_mutants = get_selected_mutants(version_dir)
+    selected_mutants = get_selected_mutants(version_dir, target_code_file_path, buggy_lineno)
     for target_file, lineno_mutants in selected_mutants.items():
         mutant_cnt = 0
         for lineno, mutants in lineno_mutants.items():
@@ -81,18 +81,11 @@ def start_process(subject_name, worker_name, version_name):
 
     # 4. get passing and failing test cases (ex. TC1.sh, TC2.sh ...)
     failing_tc_list = get_tcs(version_dir, 'failing_tcs.txt')
-    passing_tc_list = get_tcs(version_dir, 'passing_tcs.txt')
     testsuite = {
         'failing': failing_tc_list,
-        'passing': passing_tc_list
     }
     for key, tcs in testsuite.items():
         print(f"{key} test cases: {len(tcs)}")
-
-    # 5. Initiate version results csv file
-    result_csv = version_dir / 'mutation_testing_results.csv'
-    result_csv_file = result_csv.open('w')
-    result_csv_file.write("target_file,mutant_id,lineno,build_result,p2f,p2p,f2p,f2f\n")
 
 
     # 6. apply buggy version code
@@ -102,31 +95,24 @@ def start_process(subject_name, worker_name, version_name):
 
 
     # 7. Conduct mutation testing
-    conduct_mutation_testing(
+    new_f2p_set = conduct_mutation_testing(
         configs, core_working_dir, subject_name,
         version_name, selected_mutants, testsuite,
-        result_csv_file
     )
 
     # 8. Revert the buggy version code
     apply_patch(target_code_file_path, buggy_code_file, buggy_patch, core_working_dir, revert=True)
 
-    # 9. Close the result csv file
-    result_csv_file.close()
+    # # 9. write addition f2p test cases to file in testsuite_info directory
+    addition_failing_tcs_file = version_dir / 'testsuite_info/removing_failing_tcs.txt'
+    with open(addition_failing_tcs_file, 'w') as f:
+        content = '\n'.join(new_f2p_set)
+        f.write(content)
 
-def get_buggy_code_file(version_dir, buggy_code_filename):
-    buggy_code_file_dir = version_dir / 'buggy_code_file'
-    assert buggy_code_file_dir.exists(), f"Buggy code file directory {buggy_code_file_dir} does not exist"
-
-    buggy_code_file = buggy_code_file_dir / buggy_code_filename
-    assert buggy_code_file.exists(), f"Buggy code file {buggy_code_file} does not exist"
-
-    return buggy_code_file
 
 def conduct_mutation_testing(
     configs, core_working_dir, subject_name,
     version_name, selected_mutants, testsuite,
-    result_csv_file
 ):
     # --- prepare needs
     global my_env
@@ -147,6 +133,8 @@ def conduct_mutation_testing(
     tc_dir = core_working_dir / configs['test_case_directory']
     assert tc_dir.exists(), f"Test case directory {tc_dir} does not exist"
     
+    new_f2p_tcs = set()
+
     # --- start testing
     # FOR A TARGET FILE...
     for target_file, lineno_mutants in selected_mutants.items():
@@ -165,21 +153,26 @@ def conduct_mutation_testing(
                 assert mutant_file.exists(), f"Mutant file {mutant_file} does not exist"
 
                 # print(f"Testing mutant {mutant_id} ({mutant_name}) in {target_file} at line {lineno}")
-                start_test(
+                measured_f2p_set = start_test(
                     configs, core_working_dir, subject_name,
                     version_name, target_file_path, target_file, mutant_file,
                     lineno, mutant_id, mutant_name,
-                    testsuite, result_csv_file, tc_dir
+                    testsuite, tc_dir
                 )
+
+                new_f2p_tcs = new_f2p_tcs.union(measured_f2p_set)
+    
+    return new_f2p_tcs
 
 
 def start_test(
     configs, core_working_dir, subject_name,
     version_name, target_file_path, target_file, mutant_file,
     lineno, mutant_id, mutant_name,
-    testsuite, result_csv_file, tc_dir
+    testsuite, tc_dir
 ):
-    tc_outcome = {'p2f': -1, 'p2p': -1, 'f2p': -1, 'f2f': -1}
+    new_f2p_set = set()
+
     build_result = False
     # 1. Make patch file of the mutant
     mutant_patch = make_patch_file(target_file_path, mutant_file, core_working_dir, 'mutant.patch')
@@ -192,51 +185,32 @@ def start_test(
     if build_res != 0:
         print(f"Failed to build the subject with mutant {mutant_id} ({mutant_name})")
         apply_patch(target_file_path, mutant_file, mutant_patch, core_working_dir, revert=True)
-        write_results(result_csv_file, target_file, mutant_id, lineno, build_result, tc_outcome)
-        return
+        return set()
     
     # --> build is successful
     build_result = True
-    tc_outcome = {'p2f': 0, 'p2p': 0, 'f2p': 0, 'f2f': 0}
 
     # 4. Run the test suite
     print(f"running test suite for mutant {mutant_id} ({mutant_name})")
-    run_test_suite(testsuite, core_working_dir, mutant_id, tc_outcome, tc_dir)
+    new_f2p_set = run_test_suite(testsuite, core_working_dir, mutant_id, new_f2p_set, tc_dir)
 
     # 5. Apply path to the target file (revert)
     apply_patch(target_file_path, mutant_file, mutant_patch, core_working_dir, revert=True)
-    
-    # 6. Write the results to the csv file
-    write_results(result_csv_file, target_file, mutant_id, lineno, build_result, tc_outcome)
 
-def run_test_suite(testsuite, core_working_dir, mutant_id, tc_outcome, tc_dir):
-    mutant_passing_tcs = []
-    mutant_failing_tcs = []
+    return new_f2p_set
+
+def run_test_suite(testsuite, core_working_dir, mutant_id, new_f2p_set, tc_dir):
 
     for tc_type in testsuite:
         # tc_type: 'failing' or 'passing'
         for tc_script_name in testsuite[tc_type]:
             res = run_tc(tc_script_name, tc_dir)
             if res == 0:
-                mutant_passing_tcs.append(tc_script_name)
                 if tc_type == 'failing':
-                    tc_outcome['f2p'] += 1
-                elif tc_type == 'passing':
-                    tc_outcome['p2p'] += 1
-            else:
-                mutant_failing_tcs.append(tc_script_name)
-                if tc_type == 'failing':
-                    tc_outcome['f2f'] += 1
-                elif tc_type == 'passing':
-                    tc_outcome['p2f'] += 1
+                    new_f2p_set.add(tc_script_name)
     
-    # print("Passing test cases:")
-    # for tc in mutant_passing_tcs:
-    #     print(f"{tc}")
-    # print("Failing test cases:")
-    # for tc in mutant_failing_tcs:
-    #     print(f"{tc}")
-            
+    return new_f2p_set
+
 
 def run_tc(tc_script_name, tc_dir):
     global my_env
@@ -244,14 +218,6 @@ def run_tc(tc_script_name, tc_dir):
     cmd = f"./{tc_script_name}"
     res = sp.run(cmd, shell=True, cwd=tc_dir, env=my_env, stdout=sp.PIPE, stderr=sp.PIPE)
     return res.returncode
-
-
-def write_results(result_csv_file, target_file, mutant_id, lineno, build_result, tc_outcome):
-    build_str = 'PASS' if build_result else 'FAIL'
-    # tc_outcome: {'p2f': 2, 'p2p': 3, 'f2p': 0, 'f2f': 1}
-    full_tc_outcome = f"{tc_outcome['p2f']},{tc_outcome['p2p']},{tc_outcome['f2p']},{tc_outcome['f2f']}"
-
-    result_csv_file.write(f"{target_file},{mutant_id},{lineno},{build_str},{full_tc_outcome}\n")
         
 
 def get_target_file_path(target_files, target_file):
@@ -285,11 +251,15 @@ def get_tcs(version_dir, tc_file):
     return tcs_list
 
 
-def get_selected_mutants(version_dir):
+def get_selected_mutants(version_dir, target_code_file_path, buggy_lineno):
     get_selected_mutants = version_dir / 'selected_mutants.csv'
     assert get_selected_mutants.exists(), f"Selected mutants file {get_selected_mutants} does not exist"
 
+    buggy_code_file_name = target_code_file_path.split('/')[-1]
+    buggy_lineno = buggy_lineno
+
     selected_mutants = {}
+    cnt = 0
     with open(get_selected_mutants, 'r') as f:
         lines = f.readlines()
         mutants = lines[2:]
@@ -303,6 +273,12 @@ def get_selected_mutants(version_dir):
             lineno = info[2]
             mutant_name = info[3]
 
+            # only check mutants for non buggy code file and non buggy line number
+            # in purpose of reducing f2p cases on non buggy line
+            # if target_filename != "HTMLparser.c": continue
+            if target_filename != buggy_code_file_name and lineno == buggy_lineno:
+                continue
+
             if target_filename not in selected_mutants:
                 selected_mutants[target_filename] = {}
             
@@ -313,6 +289,10 @@ def get_selected_mutants(version_dir):
                 'mutant_id': mutant_id,
                 'mutant_name': mutant_name
             })
+
+            # cnt += 1
+            # if cnt == 100:
+            #     break
 
     return selected_mutants
 
@@ -327,7 +307,6 @@ def get_bug_info(version_dir):
         return target_code_file, buggy_code_filename, buggy_lineno
 
 
-
 def get_buggy_code_file(version_dir, buggy_code_filename):
     buggy_code_file_dir = version_dir / 'buggy_code_file'
     assert buggy_code_file_dir.exists(), f"Buggy code file directory {buggy_code_file_dir} does not exist"
@@ -338,27 +317,6 @@ def get_buggy_code_file(version_dir, buggy_code_filename):
     return buggy_code_file
 
 
-
-def intitiate_mutants_dir(core_working_dir, version_name, target_files):
-    mutants_dir = core_working_dir / 'generated_mutants'
-    mutants_dir.mkdir(exist_ok=True, parents=True)
-
-    version_mutants_dir = mutants_dir / version_name
-    version_mutants_dir.mkdir(exist_ok=True)
-
-    target_file_pair = []
-
-    for target_file in target_files:
-        target_file_path = core_working_dir / Path(target_file)
-        assert target_file_path.exists(), f'{target_file_path} does not exist'
-
-        target_file_name = target_file.replace('/', '-')
-        single_file_mutant_dir = version_mutants_dir / f"{target_file_name}"
-        single_file_mutant_dir.mkdir(exist_ok=True, parents=True)
-
-        target_file_pair.append((target_file_path, single_file_mutant_dir))
-    
-    return target_file_pair
 
 def make_patch_file(target_code_file_path, buggy_code_file, core_working_dir, patchname):
     patch_file = core_working_dir / patchname

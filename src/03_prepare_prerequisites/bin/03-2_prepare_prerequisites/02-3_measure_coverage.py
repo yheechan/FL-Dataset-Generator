@@ -247,6 +247,8 @@ def measure_coverage(
             print(f"Testcase {tc_name} executed buggy line {buggy_lineno}")
         elif tc_name in passing_tc_list and exclude_cct == True:
             buggy_line_cov = check_buggy_line_coverage(raw_cov, target_code_file_path, buggy_lineno)
+            # value of buggy_line_cov is 0 if the buggy line is covered
+            # value of buggy_line_cov is 1 if the buggy line is not covered
             if buggy_line_cov == 0:
                 cct_list.append(tc_name)
                 # delete raw_cov file
@@ -264,13 +266,15 @@ def measure_coverage(
             content = '\n'.join(passing_tc_list)
             f.write(content)
         
-        # update cct test cases
-        cct_list_file = version_dir / 'testsuite_info/ccts.txt'
-        with open(cct_list_file, 'w') as f:
-            content = '\n'.join(cct_list)
-            f.write(content)
+    # update cct test cases
+    cct_list_file = version_dir / 'testsuite_info/ccts.txt'
+    with open(cct_list_file, 'w') as f:
+        content = '\n'.join(cct_list)
+        f.write(content)
 
 
+# returns 0 if the buggy line is covered
+# returns 1 if the buggy line is not covered
 def check_buggy_line_coverage(raw_cov, target_code_file, buggy_lineno):
     with open(raw_cov, 'r') as f:
         cov_data = json.load(f)

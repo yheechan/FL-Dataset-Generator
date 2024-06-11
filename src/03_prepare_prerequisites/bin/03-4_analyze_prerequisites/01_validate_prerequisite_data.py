@@ -4,6 +4,7 @@ from pathlib import Path
 import argparse
 import json
 import subprocess as sp
+import csv
 
 # Current working directory
 script_path = Path(__file__).resolve()
@@ -59,8 +60,9 @@ def start_process(subject_name):
     validate_reduced_test_suite(subject_working_dir, prerequisite_data_per_bug)
 
 def validate_reduced_test_suite(subject_working_dir, prerequisite_data_per_bug):
-    for bug_dir in prerequisite_data_per_bug:
+    for idx, bug_dir in enumerate(prerequisite_data_per_bug):
         bug_name = bug_dir.name
+        print(f"Validating {idx+1}/{len(prerequisite_data_per_bug)}: {bug_name}")
 
         # GET: buggy lineno from bug_info.csv
         bug_info = bug_dir / 'bug_info.csv'
@@ -70,15 +72,21 @@ def validate_reduced_test_suite(subject_working_dir, prerequisite_data_per_bug):
         # VALIDATE: Assert that buggy_line_key.txt exists
         buggy_line_key_file = bug_dir / 'buggy_line_key.txt'
         assert buggy_line_key_file.exists(), f"Buggy line key file {buggy_line_key_file} does not exist"
-        check_buggy_lineno(buggy_line_key_file, bug_lineno)
+        buggy_line_key = check_buggy_lineno(buggy_line_key_file, bug_lineno)
 
         # VALIDATE: Assert that coverage_summary.csv exists
         coverage_summary = bug_dir / 'coverage_summary.csv'
         assert coverage_summary.exists(), f"Coverage summary file {coverage_summary} does not exist"
 
+        # GET: failing_tcs.txt and passing_tcs.txt
+        failing_tc_list = get_tcs(bug_dir, failing_txt)
+
         # VALIDATE: Assert that coverage_info/postprocessed_coverage.csv exists
         postprocessed_coverage = bug_dir / 'coverage_info' / 'postprocessed_coverage.csv'
         assert postprocessed_coverage.exists(), f"Postprocessed coverage file {postprocessed_coverage} does not exist"
+
+        # VALIDATE: Assert the failing TCs execute the buggy line in postprocessed_coverage.csv
+        result = check_failing_tcs(postprocessed_coverage, failing_tc_list, buggy_line_key)
 
         # VALIDATE: Assert that coverage_info/lines_executed_by_failing_tc.json exists
         lines_executed_by_failing_tc = bug_dir / 'coverage_info' / 'lines_executed_by_failing_tc.json'
@@ -92,6 +100,43 @@ def validate_reduced_test_suite(subject_working_dir, prerequisite_data_per_bug):
     
     print(f"All {len(prerequisite_data_per_bug)} bugs have been validated successfully")
 
+
+def check_failing_tcs(postprocessed_coverage, failing_tc_list, buggy_line_key):
+    with open(postprocessed_coverage, 'r') as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            if row['key'] == buggy_line_key:
+                for failing_tc in failing_tc_list:
+                    tc_name = failing_tc.split('.')[0]
+                    if row[tc_name] == '0':
+                        return False
+                return True
+
+
+def custome_sort(tc_script):
+    tc_filename = tc_script.split('.')[0]
+    return int(tc_filename[2:])
+
+def get_tcs(version_dir, tc_file):
+    testsuite_info_dir = version_dir / 'testsuite_info'
+    assert testsuite_info_dir.exists(), f"Testsuite info directory {testsuite_info_dir} does not exist"
+
+    tc_file_txt = testsuite_info_dir / tc_file
+    assert tc_file_txt.exists(), f"Failing test cases file {tc_file_txt} does not exist"
+
+    tcs_list = []
+
+    with open(tc_file_txt, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            line = line.strip()
+            tcs_list.append(line)
+        
+    tcs_list = sorted(tcs_list, key=custome_sort)
+
+    return tcs_list
+
 def check_buggy_lineno(buggy_line_key_file, bug_lineno):
     with buggy_line_key_file.open() as f:
         buggy_line_key = f.readline().strip()
@@ -100,6 +145,8 @@ def check_buggy_lineno(buggy_line_key_file, bug_lineno):
         buggy_lineno = buggy_line_key.split('#')[-1]
 
         assert buggy_lineno == bug_lineno, f"Bug line number mismatch: {buggy_lineno} != {bug_lineno}"
+        
+        return buggy_line_key
 
 def get_bug_info(bug_info):
     target_file = None
