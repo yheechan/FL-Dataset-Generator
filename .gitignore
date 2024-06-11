@@ -7,6 +7,4 @@ subjects/
 *-working_directory/
 *.zip
 libxml2/
-02-5_analyze_buggy_versions/
 cov/
-02-6_validate_reduced_tcs/

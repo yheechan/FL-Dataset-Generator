@@ -98,9 +98,10 @@ def get_retesting_buggy_versions(subject_working_dir, rank_summary_file_name):
 
         for row in reader:
             failing_tcs = int(row['# of failing tcs'])
-            additional_failing_tcs = int(row['# of additional failing tcs'])
+            excluded_failing_tcs = int(row['# of excluded failing tcs'])
+            # additional_failing_tcs = int(row['# of additional failing tcs'])
 
-            if (failing_tcs + additional_failing_tcs) < 500:
+            if (failing_tcs + excluded_failing_tcs) < 500:
                 retest_buggy_versions_list.append(row['bug_name'])
     
     return retest_buggy_versions_list

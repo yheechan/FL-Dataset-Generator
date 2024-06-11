@@ -167,10 +167,27 @@ $ ./03_analyze_additional_failing_with_rank.py --subject libxml2 --mbfl-set-name
 $ ./04_add_additional_testsuite.py --subject libxml2 --mbfl-set-name mbfl_features
 ```
 
+## 04-6_retest_with_refined_testsuite
+### What it does and usage
+1. ``01_copy_buggy_version.py``:
+    * reads ``additional_failing_tcs_with_rank.csv``
+    * accumulates buggy versions that follow following condition
+        * len(failing_tcs) + len(excluded_failing_tcs) < 500
+    * copies buggy versions to ``02_select_usable_buggy_versions`` where prerequisite retrieves the buggy version set to make data
+```
+./01_copy_buggy_version.py --subject libxml2 --mbfl-set-name mbfl_features --rank-summary-file-name additional_failing_tcs_with_rank.csv
+```
+
 # About mbfl dataset
 ### mbfl_features
+* libxml2-working_directory-193-240603-v1
 * number of buggy versions: 193
 * rank is bad
 
 * libxml2-working_directory-193-240604
     * mbfl features with additional failing TCs
+* libxml2-working_directory-193-240610-v2
+    * has subset measurement
+    * has differentiated additional failing TCs
+* libxml2-working_directory-193-240611-v1
+    * mbfl features after additing total additional failing TCs

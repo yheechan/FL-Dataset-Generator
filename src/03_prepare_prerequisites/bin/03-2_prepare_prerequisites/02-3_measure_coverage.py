@@ -37,10 +37,10 @@ my_env = os.environ.copy()
 def main():
     parser = make_parser()
     args = parser.parse_args()
-    start_process(args.subject, args.worker, args.version)
+    start_process(args.subject, args.worker, args.version, args.use_excluded_failing_tcs)
 
 
-def start_process(subject_name, worker_name, version_name):
+def start_process(subject_name, worker_name, version_name, use_excluded_failing_tcs):
     subject_working_dir = prepare_prerequisites_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
@@ -65,6 +65,10 @@ def start_process(subject_name, worker_name, version_name):
     # print(f"Buggy line number: {buggy_lineno}")
     assert version_name == buggy_code_filename, f"Version name {version_name} does not match with buggy code filename {buggy_code_filename}"
 
+    if use_excluded_failing_tcs:
+        print("Using excluded failing test cases")
+        move_excluded_failing_tcs2_failing_tcs(version_dir)
+
     # 3. get failing tc list (ex, TC1.sh, TC2.sh, ...)
     failing_tc_list = get_tcs(version_dir, 'failing_tcs.txt')
     print(f"Total failing test cases: {len(failing_tc_list)}")
@@ -82,6 +86,31 @@ def start_process(subject_name, worker_name, version_name):
         target_code_file_path, buggy_code_file, 
         buggy_lineno, failing_tc_list, passing_tc_list, version_dir
     )
+
+def move_excluded_failing_tcs2_failing_tcs(version_dir):
+    excluded_failing_tcs_file = version_dir / 'testsuite_info/excluded_failing_tcs.txt'
+    assert excluded_failing_tcs_file.exists(), f"Excluded failing test cases file {excluded_failing_tcs_file} does not exist"
+
+    failing_tcs_file = version_dir / 'testsuite_info/failing_tcs.txt'
+    assert failing_tcs_file.exists(), f"Failing test cases file {failing_tcs_file} does not exist"
+
+    with open(excluded_failing_tcs_file, 'r') as f:
+        excluded_tcs = f.readlines()
+        excluded_tcs = [tc.strip() for tc in excluded_tcs]
+
+    with open(failing_tcs_file, 'r') as f:
+        failing_tcs = f.readlines()
+        failing_tcs = [tc.strip() for tc in failing_tcs]
+    
+    excluded_tcs_set = set(excluded_tcs)
+    failing_tcs_set = set(failing_tcs)
+    all_failing_tcs = excluded_tcs_set.union(failing_tcs_set)
+    with open(failing_tcs_file, 'w') as f:
+        content = '\n'.join(all_failing_tcs)
+        f.write(content)
+    
+    with open(excluded_failing_tcs_file, 'w') as f:
+        f.write('')
 
 def get_bug_info(version_dir):
     bug_info_csv = version_dir / 'bug_info.csv'
@@ -425,6 +454,7 @@ def make_parser():
     parser.add_argument('--subject', type=str, help='Subject name', required=True)
     parser.add_argument('--worker', type=str, help='Worker name (e.g., <machine-name>/<core-id>)', required=True)
     parser.add_argument('--version', type=str, help='Version name', required=True)
+    parser.add_argument('--use-excluded-failing-tcs', action='store_true', help='Use excluded failing test cases')
     return parser
 
 if __name__ == "__main__":

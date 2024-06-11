@@ -35,10 +35,10 @@ real_world_buggy_versions = 'real_world_buggy_versions'
 def main():
     parser = make_parser()
     args = parser.parse_args()
-    start_process(args.subject, args.worker)
+    start_process(args.subject, args.worker, args.use_excluded_failing_tcs)
 
 
-def start_process(subject_name, worker_name):
+def start_process(subject_name, worker_name, use_excluded_failing_tcs):
     subject_working_dir = prepare_prerequisites_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
@@ -52,7 +52,7 @@ def start_process(subject_name, worker_name):
     assigned_versions_list = get_assigned_buggy_versions(configs, core_working_dir)
 
     # 3. conduct mutation testing
-    prepare_prerequisites(configs, core_working_dir, worker_name, assigned_versions_list)
+    prepare_prerequisites(configs, core_working_dir, worker_name, assigned_versions_list, use_excluded_failing_tcs)
 
 
 
@@ -68,7 +68,7 @@ def get_assigned_buggy_versions(configs, core_working_dir):
     return assigned_versions_list
 
 
-def prepare_prerequisites(configs, core_working_dir, worker_name, assigned_versions_list):
+def prepare_prerequisites(configs, core_working_dir, worker_name, assigned_versions_list, use_excluded_failing_tcs):
     global prepare_prerequisites_cmd_dir
 
     # --subject libxml2 --worker gaster23.swtv/core0 --version <assigned-version>
@@ -99,6 +99,8 @@ def prepare_prerequisites(configs, core_working_dir, worker_name, assigned_versi
             '--worker', worker_name,
             '--version', version_name
         ]
+        if use_excluded_failing_tcs:
+            cmd.append('--use-excluded-failing-tcs')
         res = sp.run(cmd)
         if res.returncode != 0:
             raise Exception('Failed to execute buggy version prerequisites script')
@@ -141,6 +143,7 @@ def make_parser():
     parser = argparse.ArgumentParser(description='Copy subject to working directory')
     parser.add_argument('--subject', type=str, help='Subject name', required=True)
     parser.add_argument('--worker', type=str, help='Worker name (e.g., <machine-name>/<core-id>)', required=True)
+    parser.add_argument('--use-excluded-failing-tcs', action='store_true', help='Use excluded failing test cases')
     return parser
 
 if __name__ == "__main__":

@@ -142,3 +142,11 @@ $ ./01_testsuite_statistics.py --subject <subject-name> --versions-set-name <dir
 ```
 ./03_apply_reduced_testsuite --subject libxml2 <subject-name> --version-set-name <dir-name> --reduced-testsuite <reduced-testsuite-filename>
 ```
+
+
+## dataset
+* libxml2-working_directory-240524-v1.zip
+    * with reduced
+* libxml2-working_directory-240611-v2.zip
+    * with reduced-appropriate
+    * where appropriate are versions with failingTC + excludedfailingTC < 500
