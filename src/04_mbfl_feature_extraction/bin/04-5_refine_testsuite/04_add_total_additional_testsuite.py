@@ -41,7 +41,7 @@ passing_txt = 'passing_tcs.txt'
 ccts_txt = 'ccts.txt'
 excluded_failing_txt = 'excluded_failing_tcs.txt'
 excluded_passing_txt = 'excluded_passing_tcs.txt'
-excluded_txt = 'excluded_tcs.txt'
+# excluded_txt = 'excluded_tcs.txt'
 additional_failing_txt = 'additional_failing_tcs.txt'
 
 

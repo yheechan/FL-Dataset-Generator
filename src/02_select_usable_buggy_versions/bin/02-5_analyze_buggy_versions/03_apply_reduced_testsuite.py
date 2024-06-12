@@ -112,9 +112,14 @@ def reduce_testsuite(configs, subject_working_dir, versions_set_name, reduced_te
         reduced_failing_tc_set = failing_tc_set.intersection(reduced_tc_set)
         reduced_passing_tc_set = passing_tc_set.intersection(reduced_tc_set)
 
-        # 5.3 get excluded test cases
+        # 5.3 get excluded test cases and sort them
         excluded_failing_tc_set = failing_tc_set - reduced_failing_tc_set
+        excluded_failing_tc_list = list(excluded_failing_tc_set)
+        excluded_failing_tc_list_sorted = sorted(excluded_failing_tc_list, key=custome_sort)
+
         excluded_passing_tc_set = passing_tc_set - reduced_passing_tc_set
+        excluded_passing_tc_list = list(excluded_passing_tc_set)
+        excluded_passing_tc_list_sorted = sorted(excluded_passing_tc_list, key=custome_sort)
 
         # sort
         reduced_failing_tc_set = sorted(reduced_failing_tc_set, key=custome_sort)
@@ -150,21 +155,21 @@ def reduce_testsuite(configs, subject_working_dir, versions_set_name, reduced_te
             # 5.5 save excluded test cases
             excluded_failing_tcs = new_testsuite_dir / excluded_failing_txt
             with open(excluded_failing_tcs, 'w') as f:
-                content = '\n'.join(excluded_failing_tc_set)
+                content = '\n'.join(excluded_failing_tc_list_sorted)
                 f.write(content)
             
             excluded_passing_tcs = new_testsuite_dir / excluded_passing_txt
             with open(excluded_passing_tcs, 'w') as f:
-                content = '\n'.join(excluded_passing_tc_set)
+                content = '\n'.join(excluded_passing_tc_list_sorted)
                 f.write(content)
 
-            excluded_tcs = new_testsuite_dir / excluded_txt
-            with open(excluded_tcs, 'w') as f:
-                total_excluded = excluded_failing_tc_set.union(excluded_passing_tc_set)
-                # sort
-                total_excluded = sorted(total_excluded, key=custome_sort)
-                content = '\n'.join(total_excluded)
-                f.write(content)
+            # excluded_tcs = new_testsuite_dir / excluded_txt
+            # with open(excluded_tcs, 'w') as f:
+            #     total_excluded = excluded_failing_tc_set.union(excluded_passing_tc_set)
+            #     # sort
+            #     total_excluded = sorted(total_excluded, key=custome_sort)
+            #     content = '\n'.join(total_excluded)
+            #     f.write(content)
         else:
             excluded_buggy_version_cnt += 1
     

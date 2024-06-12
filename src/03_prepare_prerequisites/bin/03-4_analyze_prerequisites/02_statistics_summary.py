@@ -64,7 +64,7 @@ def make_summary(subject_working_dir, prerequisite_data_per_bug):
     num_ccts = []
     num_excluded_failing_tcs = []
     num_excluded_passing_tcs = []
-    num_excluded_tcs = []
+    # num_excluded_tcs = []
     num_utilized_tcs = []
     num_lines_executed_by_failing_tcs = []
     num_lines_executed_by_passing_tcs = []
@@ -73,7 +73,7 @@ def make_summary(subject_working_dir, prerequisite_data_per_bug):
     all_coverage = []
 
     features = [
-        'buggy version name', '#_failing_tcs', '#_passing_tcs', '#_ccts', '#_excluded_failing_tcs', '#_excluded_passing_tcs', '#_excluded_tcs',
+        'buggy version name', '#_failing_tcs', '#_passing_tcs', '#_ccts', '#_excluded_failing_tcs', '#_excluded_passing_tcs', # '#_excluded_tcs',
         '#_utilized_tcs', '#_lines_executed_by_failing_tcs', '#_lines_executed_by_passing_tcs',
         '#_total_lines_executed', '#_total_lines', 'coverage'
     ]
@@ -102,7 +102,7 @@ def make_summary(subject_working_dir, prerequisite_data_per_bug):
             num_ccts.append(int(info[2]))
             num_excluded_failing_tcs.append(int(info[3]))
             num_excluded_passing_tcs.append(int(info[4]))
-            num_excluded_tcs.append(int(info[5]))
+            # num_excluded_tcs.append(int(info[5]))
             num_utilized_tcs.append(int(info[6]))
             num_lines_executed_by_failing_tcs.append(int(info[7]))
             num_lines_executed_by_passing_tcs.append(int(info[8]))
@@ -129,7 +129,7 @@ def make_summary(subject_working_dir, prerequisite_data_per_bug):
     avg_ccts = sum(num_ccts) / len(num_ccts)
     avg_excluded_failing_tcs = sum(num_excluded_failing_tcs) / len(num_excluded_failing_tcs)
     avg_excluded_passing_tcs = sum(num_excluded_passing_tcs) / len(num_excluded_passing_tcs)
-    avg_excluded_tcs = sum(num_excluded_tcs) / len(num_excluded_tcs)
+    # avg_excluded_tcs = sum(num_excluded_tcs) / len(num_excluded_tcs)
     avg_utilized_tcs = sum(num_utilized_tcs) / len(num_utilized_tcs)
     avg_lines_executed_by_failing_tcs = sum(num_lines_executed_by_failing_tcs) / len(num_lines_executed_by_failing_tcs)
     avg_lines_executed_by_passing_tcs = sum(num_lines_executed_by_passing_tcs) / len(num_lines_executed_by_passing_tcs)
@@ -142,7 +142,7 @@ def make_summary(subject_working_dir, prerequisite_data_per_bug):
     print(f"Average cct: {avg_ccts}")
     print(f"Average excluded failing test cases: {avg_excluded_failing_tcs}")
     print(f"Average excluded passing test cases: {avg_excluded_passing_tcs}")
-    print(f"Average excluded test cases: {avg_excluded_tcs}")
+    # print(f"Average excluded test cases: {avg_excluded_tcs}")
     print(f"Average utilized test cases: {avg_utilized_tcs}")
     print(f"Average lines executed by failing test cases: {avg_lines_executed_by_failing_tcs}")
     print(f"Average lines executed by passing test cases: {avg_lines_executed_by_passing_tcs}")

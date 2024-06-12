@@ -86,7 +86,7 @@ def analyze_test_suite(configs, subject_working_dir, versions_set_name, output_c
 
     total_buggy_versions = len(buggy_version_list)
     
-    csv_keys = ["buggy_version_name", "#_failiing_TCs", "#_passing_TCs", "#_excluded_failing_TCs", "#_excluded_passing_TCs", "#_excluded_TCs", "#_total_TCs"]
+    csv_keys = ["buggy_version_name", "#_failiing_TCs", "#_passing_TCs", "#_excluded_failing_TCs", "#_excluded_passing_TCs", "#_total_TCs"]
 
     with open(summary_stats_csv, 'w') as f:
         f.write(','.join(csv_keys) + '\n')
@@ -107,15 +107,15 @@ def analyze_test_suite(configs, subject_working_dir, versions_set_name, output_c
             # get excluded test cases
             excluded_failing_tcs = testsuite_dir / excluded_failing_txt
             excluded_passing_tcs = testsuite_dir / excluded_passing_txt
-            excluded_tcs = testsuite_dir / excluded_txt
+            # excluded_tcs = testsuite_dir / excluded_txt
 
             # get excluded test cases
             excluded_failing_tcs_list = get_test_cases(excluded_failing_tcs)
             excluded_passing_tcs_list = get_test_cases(excluded_passing_tcs)
-            excludeded_tcs_list = get_test_cases(excluded_tcs)
+            # excludeded_tcs_list = get_test_cases(excluded_tcs)
             
             # assert that excluded failing_tcs and excluded passsings_tcs == excluded tcs
-            assert len(excludeded_tcs_list) == len(excluded_failing_tcs_list) + len(excluded_passing_tcs_list), f"Excluded test cases are not equal to the sum of excluded failing and excluded passing test cases"
+            # assert len(excludeded_tcs_list) == len(excluded_failing_tcs_list) + len(excluded_passing_tcs_list), f"Excluded test cases are not equal to the sum of excluded failing and excluded passing test cases"
 
             # get test cases
             failing_tcs_list = get_test_cases(failing_tcs)
@@ -123,19 +123,19 @@ def analyze_test_suite(configs, subject_working_dir, versions_set_name, output_c
 
             total_testsuite.update(failing_tcs_list)
             total_testsuite.update(passing_tcs_list)
-            total_testsuite.update(excludeded_tcs_list)
+            # total_testsuite.update(excludeded_tcs_list)
 
 
             # save statistics (later for average, max, min, etc.)
             failing_TCs = len(failing_tcs_list)
             passing_TCs = len(passing_tcs_list)
-            exclued_failing_TCs = len(excluded_failing_tcs_list)
+            excluded_failing_TCs = len(excluded_failing_tcs_list)
             excluded_passing_TCs = len(excluded_passing_tcs_list)
-            excluded_TCs = len(excludeded_tcs_list)
-            total_TCs = failing_TCs + passing_TCs + excluded_TCs
+            # excluded_TCs = len(excludeded_tcs_list)
+            total_TCs = failing_TCs + passing_TCs + excluded_failing_TCs + excluded_passing_TCs
 
             # write to csv
-            f.write(f"{buggy_version_name}, {failing_TCs}, {passing_TCs}, {exclued_failing_TCs}, {excluded_passing_TCs}, {excluded_TCs}, {total_TCs}\n")
+            f.write(f"{buggy_version_name}, {failing_TCs}, {passing_TCs}, {excluded_failing_TCs}, {excluded_passing_TCs}, {total_TCs}\n")
 
             # if failing test cases are more than 500, skip this buggy version
             if failing_TCs > 500:

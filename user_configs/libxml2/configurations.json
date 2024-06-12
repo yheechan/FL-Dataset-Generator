@@ -9,6 +9,7 @@
     "use_distributed_machines": false,
     "exclude_cct": true,
     "max_mutants": 5,
+    "max_mutated_lines": 500,
     "single_machine": {
         "machine_name": "gaster23.swtv",
         "machine_cores": 32

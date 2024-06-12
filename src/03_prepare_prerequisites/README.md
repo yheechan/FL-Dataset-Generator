@@ -9,7 +9,6 @@
         * passing
         * failing
         * CCT
-        * excluded
         * excluded_passing
         * excluded_failing
     4. lines executed by failing lines: ``coverage_info/lines_executed_by_failing_tcs.json``
@@ -54,21 +53,22 @@ This step first builds the buggy version and extracts line-to-function mapping i
 * measures coverage of each test case (passing and failing)
     * if CCT option is True, passings TCs that execute buggy line is excluded (written in ``ccts.txt`` file)
 * postprocess the coverage information to CSV format
+* optional flag ``--use-excluded-failing-tcs`` moves the tcs from ``excluded_failing_tcs.txt`` back to ``failing_tcs.txt`` before preparing prerequisite data
 
 ### Usage:
 * When using single machine (execution on all cores)
 ```
-$ ./general_command_all_local_cores.py --subject libxml2
+$ ./general_command_all_local_cores.py --subject libxml2 [--use-excluded-failing-tcs]
 ```
 
 * When using single machine (execution on single core)
 ```
-$ ./general_command --subject <subject-name> --worker gaster23.swtc/core0
+$ ./general_command --subject <subject-name> --worker gaster23.swtc/core0 [--use-excluded-failing-tcs]
 ```
 
 * When using single machine (execution on single version of single core)
 ```
-$ ./01_initial_configure_and_build.py --subject libxml2 --worker gaster23.swtv/core0
+$ ./01_initial_configure_and_build.py --subject libxml2 --worker gaster23.swtv/core0 [--use-excluded-failing-tcs]
 $ ./02-2_extract_line2function.py --subject libxml2 --worker gaster23.swtv/core0 --version HTMLparser.MUT123.c
 $ ./02-3_measure_coverage.py --subject libxml2 --worker gaster23.swtv/core0 --version HTMLparser.MUT123.c
 $ ./02-4_postprocess_coverage.py --subject libxml2 --worker gaster23.swtv/core0 --version HTMLparser.MUT123.c
@@ -103,7 +103,7 @@ $ ./01-1_retrieve_usable_buggy_versions.sh
 1. ``02_validate_prerequisite_data.py``: Validation criteria are...
     * existance of ``bug_info.csv`` file. This file contains ``target_code_file,buggy_code_file,buggy_lineno`` as features of the buggy version.
     * existance of ``buggy_line_key.txt`` file. This file contains the key string of buggy line.
-    * existance of ``coverage_summary.csv`` file. This file contains test cases (failing, passing, cct, excluded failing, excluding passing, excluded) and coverage (lines executed by failing and passing) information.
+    * existance of ``coverage_summary.csv`` file. This file contains test cases (failing, passing, cct, excluded failing, excluding passing) and coverage (lines executed by failing and passing) information.
     * existance of ``posprocessed_coverage.csv`` file. This file contains the real coverage information of each utilized TCs.
     * existance of ``linesd_executed_by_failing_tcs.json`` file.
     * existance of ``line2function_info.json`` file.

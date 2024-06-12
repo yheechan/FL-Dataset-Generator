@@ -41,7 +41,7 @@ passing_txt = 'passing_tcs.txt'
 ccts_txt = 'ccts.txt'
 excluded_failing_txt = 'excluded_failing_tcs.txt'
 excluded_passing_txt = 'excluded_passing_tcs.txt'
-excluded_txt = 'excluded_tcs.txt'
+# excluded_txt = 'excluded_tcs.txt'
 additional_failing_txt = 'additional_failing_tcs.txt'
 
 
@@ -101,7 +101,7 @@ def start_analysis(configs, mbfl_features_per_bug):
         ccts = get_tcs(bug_dir, 'ccts.txt')
         excluded_failing_tcs = get_tcs(bug_dir, 'excluded_failing_tcs.txt')
         excluded_passing_tcs = get_tcs(bug_dir, 'excluded_passing_tcs.txt')
-        excluded_tcs = get_tcs(bug_dir, 'excluded_tcs.txt')
+        # excluded_tcs = get_tcs(bug_dir, 'excluded_tcs.txt')
         additional_failing_tcs = get_tcs(bug_dir, 'additional_failing_tcs.txt')
 
 
@@ -144,7 +144,7 @@ def start_analysis(configs, mbfl_features_per_bug):
             '# of ccts': len(ccts),
             '# of excluded failing tcs': len(excluded_failing_tcs),
             '# of excluded passing tcs': len(excluded_passing_tcs),
-            '# of excluded tcs': len(excluded_tcs),
+            # '# of excluded tcs': len(excluded_tcs),
             '# of additional failing tcs': len(additional_failing_tcs),
 
             '# of lines executed by failing TCs': len(lines_executed_by_failing_tcs),

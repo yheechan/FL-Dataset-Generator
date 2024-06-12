@@ -94,20 +94,37 @@ def move_excluded_failing_tcs2_failing_tcs(version_dir):
     failing_tcs_file = version_dir / 'testsuite_info/failing_tcs.txt'
     assert failing_tcs_file.exists(), f"Failing test cases file {failing_tcs_file} does not exist"
 
+    # excluded_tcs_file = version_dir / 'testsuite_info/excluded_tcs.txt'
+    # assert excluded_tcs_file.exists(), f"Excluded test cases file {excluded_tcs_file} does not exist"
+
     with open(excluded_failing_tcs_file, 'r') as f:
-        excluded_tcs = f.readlines()
-        excluded_tcs = [tc.strip() for tc in excluded_tcs]
+        excluded_failing_tcs = f.readlines()
+        excluded_failing_tcs = [tc.strip() for tc in excluded_failing_tcs]
 
     with open(failing_tcs_file, 'r') as f:
         failing_tcs = f.readlines()
         failing_tcs = [tc.strip() for tc in failing_tcs]
     
-    excluded_tcs_set = set(excluded_tcs)
+    # with open(excluded_tcs_file, 'r') as f:
+    #     excluded_tcs = f.readlines()
+    #     excluded_tcs = [tc.strip() for tc in excluded_tcs]
+    
+    excluded_failing_tcs_set = set(excluded_failing_tcs)
     failing_tcs_set = set(failing_tcs)
-    all_failing_tcs = excluded_tcs_set.union(failing_tcs_set)
+    # excluded_tcs_set = set(excluded_tcs)
+
+    all_failing_tcs = excluded_failing_tcs_set.union(failing_tcs_set)
+    # excluded_tcs_set = excluded_tcs_set.difference(excluded_failing_tcs_set)
+
     with open(failing_tcs_file, 'w') as f:
+        all_failing_tcs = sorted(all_failing_tcs, key=custome_sort)
         content = '\n'.join(all_failing_tcs)
         f.write(content)
+    
+    # with open(excluded_tcs_file, 'w') as f: 
+    #     excluded_tcs_set = sorted(excluded_tcs_set, key=custome_sort)
+    #     content = '\n'.join(excluded_tcs_set)
+    #     f.write(content)
     
     with open(excluded_failing_tcs_file, 'w') as f:
         f.write('')

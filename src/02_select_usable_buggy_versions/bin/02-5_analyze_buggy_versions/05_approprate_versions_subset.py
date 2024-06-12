@@ -96,17 +96,17 @@ def select_appropriate_versions(configs, subject_working_dir, versions_set_name)
 
         excluded_failing_tcs = testsuite_dir / excluded_failing_txt
         excluded_passing_tcs = testsuite_dir / excluded_passing_txt
-        excluded_tcs = testsuite_dir / excluded_txt
+        # excluded_tcs = testsuite_dir / excluded_txt
         assert excluded_failing_tcs.exists(), f"Excluded failing test cases file {excluded_failing_tcs} does not exist"
         assert excluded_passing_tcs.exists(), f"Excluded passing test cases file {excluded_passing_tcs} does not exist"
-        assert excluded_tcs.exists(), f"Excluded test cases file {excluded_tcs} does not exist"
+        # assert excluded_tcs.exists(), f"Excluded test cases file {excluded_tcs} does not exist"
 
         # get test cases
         failing_tc_set = get_test_cases(failing_tcs)
         passing_tc_set = get_test_cases(passing_tcs)
         excluded_failing_tc_set = get_test_cases(excluded_failing_tcs)
         excluded_passing_tc_set = get_test_cases(excluded_passing_tcs)
-        excluded_tc_set = get_test_cases(excluded_tcs)
+        # excluded_tc_set = get_test_cases(excluded_tcs)
 
         total_failing_tcs = failing_tc_set.union(excluded_failing_tc_set)
 
