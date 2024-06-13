@@ -23,7 +23,6 @@ scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prep
 scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prepare_prerequisites/bin/03-2_prepare_prerequisites faster34.swtv:/home/yangheechan/libxml2-prepare_prerequisites/bin/ & 
 scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prepare_prerequisites/bin/03-2_prepare_prerequisites faster36.swtv:/home/yangheechan/libxml2-prepare_prerequisites/bin/ & 
 scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prepare_prerequisites/bin/03-2_prepare_prerequisites faster37.swtv:/home/yangheechan/libxml2-prepare_prerequisites/bin/ & 
-scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prepare_prerequisites/bin/03-2_prepare_prerequisites faster38.swtv:/home/yangheechan/libxml2-prepare_prerequisites/bin/ & 
 echo scp done, waiting...
 date
 wait

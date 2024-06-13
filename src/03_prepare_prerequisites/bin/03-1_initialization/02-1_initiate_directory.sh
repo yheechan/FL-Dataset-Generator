@@ -597,18 +597,6 @@ ssh faster37.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/libx
 ssh faster37.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster37.swtv/core7/assigned_buggy_versions/" & 
 ssh faster37.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/bin/" & 
 ssh faster37.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster37.swtv/core7/coverage/" & 
-ssh faster38.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster38.swtv/core0/assigned_buggy_versions/" & 
-ssh faster38.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/bin/" & 
-ssh faster38.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster38.swtv/core0/coverage/" & 
-ssh faster38.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster38.swtv/core1/assigned_buggy_versions/" & 
-ssh faster38.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/bin/" & 
-ssh faster38.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster38.swtv/core1/coverage/" & 
-ssh faster38.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster38.swtv/core2/assigned_buggy_versions/" & 
-ssh faster38.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/bin/" & 
-ssh faster38.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster38.swtv/core2/coverage/" & 
-ssh faster38.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster38.swtv/core3/assigned_buggy_versions/" & 
-ssh faster38.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/bin/" & 
-ssh faster38.swtv "mkdir -p /home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster38.swtv/core3/coverage/" & 
 echo ssh done, waiting...
 date
 wait

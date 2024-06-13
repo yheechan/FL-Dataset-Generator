@@ -100,7 +100,7 @@ def write_selected_mutants(version_dir, selected_fileline2mutants):
 def select_mutants(
         configs, core_working_dir, version_name,
         version_dir, lines_executed_by_failing_tc, subject_name):
-    
+    # TODO: add number of failing tcs in each line
     # --- prepare needed directories
     version_mutants_dir = core_working_dir / 'generated_mutants' / version_name
     assert version_mutants_dir.exists(), f"Version mutants directory {version_mutants_dir} does not exist"
@@ -186,7 +186,7 @@ def get_lines_executed_by_failing_tcs(version_dir, target_code_file_path, buggy_
         filename = target_file.split('/')[-1]
         execed_lines[filename] = []
 
-    # TODO: read the file and return the content
+    # TODO: save number of failing tcs to be written in 'selected_mutants.csv'
     buggy_filename = target_code_file_path.split('/')[-1]
     executed_buggy_line = False
     for key, tcs in lines_executed_by_failing_tc_json.items():

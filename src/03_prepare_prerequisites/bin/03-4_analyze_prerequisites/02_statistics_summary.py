@@ -103,16 +103,16 @@ def make_summary(subject_working_dir, prerequisite_data_per_bug):
             num_excluded_failing_tcs.append(int(info[3]))
             num_excluded_passing_tcs.append(int(info[4]))
             # num_excluded_tcs.append(int(info[5]))
-            num_utilized_tcs.append(int(info[6]))
-            num_lines_executed_by_failing_tcs.append(int(info[7]))
-            num_lines_executed_by_passing_tcs.append(int(info[8]))
-            num_total_lines_executed.append(int(info[9]))
-            num_total_lines.append(int(info[10]))
+            num_utilized_tcs.append(int(info[5]))
+            num_lines_executed_by_failing_tcs.append(int(info[6]))
+            num_lines_executed_by_passing_tcs.append(int(info[7]))
+            num_total_lines_executed.append(int(info[8]))
+            num_total_lines.append(int(info[9]))
 
-            if int(info[5]) > 6000:
+            if int(info[6]) > 6000:
                 buggy_versions_with_big_lines_executed_by_failing_tcs.append(bug_name)
                 
-            coverage = int(info[7]) / int(info[8])
+            coverage = int(info[8]) / int(info[9])
             all_coverage.append(coverage)
             
             info.append(coverage)

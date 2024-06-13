@@ -37,10 +37,10 @@ my_env = os.environ.copy()
 def main():
     parser = make_parser()
     args = parser.parse_args()
-    start_process(args.subject, args.worker, args.version, args.use_excluded_failing_tcs)
+    start_process(args.subject, args.worker, args.version, args.use_excluded_failing_tcs, args.exclude_ccts)
 
 
-def start_process(subject_name, worker_name, version_name, use_excluded_failing_tcs):
+def start_process(subject_name, worker_name, version_name, use_excluded_failing_tcs, exclude_ccts):
     subject_working_dir = prepare_prerequisites_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
 
@@ -84,7 +84,8 @@ def start_process(subject_name, worker_name, version_name, use_excluded_failing_
     measure_coverage(
         configs, core_working_dir, version_name, 
         target_code_file_path, buggy_code_file, 
-        buggy_lineno, failing_tc_list, passing_tc_list, version_dir
+        buggy_lineno, failing_tc_list, passing_tc_list, version_dir,
+        exclude_ccts
     )
 
 def move_excluded_failing_tcs2_failing_tcs(version_dir):
@@ -178,11 +179,14 @@ def get_tcs(version_dir, tc_file):
 def measure_coverage(
         configs, core_working_dir, version_name, 
         target_code_file_path, buggy_code_file, 
-        buggy_lineno, failing_tc_list, passing_tc_list, version_dir):
+        buggy_lineno, failing_tc_list, passing_tc_list, version_dir,
+        exclude_ccts):
     global my_env
 
     # --- prepare needed directories
-    exclude_cct = configs['exclude_cct']
+    exclude_cct = exclude_ccts
+    if exclude_cct == True:
+        print("Excluding CCT test cases")
 
     # gcov executable
     home_directory = configs['home_directory']
@@ -472,6 +476,7 @@ def make_parser():
     parser.add_argument('--worker', type=str, help='Worker name (e.g., <machine-name>/<core-id>)', required=True)
     parser.add_argument('--version', type=str, help='Version name', required=True)
     parser.add_argument('--use-excluded-failing-tcs', action='store_true', help='Use excluded failing test cases')
+    parser.add_argument('--exclude-ccts', action='store_true', help='Exclude cct test cases')
     return parser
 
 if __name__ == "__main__":

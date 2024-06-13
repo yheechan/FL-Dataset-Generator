@@ -197,10 +197,6 @@ scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prep
 scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prepare_prerequisites/libxml2-working_directory/libxml2 faster37.swtv:/home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster37.swtv/core5/ & 
 scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prepare_prerequisites/libxml2-working_directory/libxml2 faster37.swtv:/home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster37.swtv/core6/ & 
 scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prepare_prerequisites/libxml2-working_directory/libxml2 faster37.swtv:/home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster37.swtv/core7/ & 
-scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prepare_prerequisites/libxml2-working_directory/libxml2 faster38.swtv:/home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster38.swtv/core0/ & 
-scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prepare_prerequisites/libxml2-working_directory/libxml2 faster38.swtv:/home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster38.swtv/core1/ & 
-scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prepare_prerequisites/libxml2-working_directory/libxml2 faster38.swtv:/home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster38.swtv/core2/ & 
-scp -r /home/yangheechan/mbfl-dataset-gen/LIGNex1_FL_dataset_LIBXML2/src/03_prepare_prerequisites/libxml2-working_directory/libxml2 faster38.swtv:/home/yangheechan/libxml2-prepare_prerequisites/libxml2-working_directory/workers_preparing_prerequisites/faster38.swtv/core3/ & 
 echo scp done, waiting...
 date
 wait

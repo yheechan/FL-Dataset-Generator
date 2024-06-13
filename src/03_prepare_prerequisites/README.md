@@ -54,29 +54,30 @@ This step first builds the buggy version and extracts line-to-function mapping i
     * if CCT option is True, passings TCs that execute buggy line is excluded (written in ``ccts.txt`` file)
 * postprocess the coverage information to CSV format
 * optional flag ``--use-excluded-failing-tcs`` moves the tcs from ``excluded_failing_tcs.txt`` back to ``failing_tcs.txt`` before preparing prerequisite data
+* optional flag ``--exclude-ccts`` prepares prerequisite data (coverage) of each test case excluding those that are coincidentally correct TCs.
 
 ### Usage:
 * When using single machine (execution on all cores)
 ```
-$ ./general_command_all_local_cores.py --subject libxml2 [--use-excluded-failing-tcs]
+$ ./general_command_all_local_cores.py --subject libxml2 [--use-excluded-failing-tcs] [--exclude-ccts]
 ```
 
 * When using single machine (execution on single core)
 ```
-$ ./general_command --subject <subject-name> --worker gaster23.swtc/core0 [--use-excluded-failing-tcs]
+$ ./general_command --subject <subject-name> --worker gaster23.swtc/core0 [--use-excluded-failing-tcs] [--exclude-ccts]
 ```
 
 * When using single machine (execution on single version of single core)
 ```
-$ ./01_initial_configure_and_build.py --subject libxml2 --worker gaster23.swtv/core0 [--use-excluded-failing-tcs]
+$ ./01_initial_configure_and_build.py --subject libxml2 --worker gaster23.swtv/core0
 $ ./02-2_extract_line2function.py --subject libxml2 --worker gaster23.swtv/core0 --version HTMLparser.MUT123.c
-$ ./02-3_measure_coverage.py --subject libxml2 --worker gaster23.swtv/core0 --version HTMLparser.MUT123.c
+$ ./02-3_measure_coverage.py --subject libxml2 --worker gaster23.swtv/core0 --version HTMLparser.MUT123.c [--use-excluded-failing-tcs] [--exclude-ccts]
 $ ./02-4_postprocess_coverage.py --subject libxml2 --worker gaster23.swtv/core0 --version HTMLparser.MUT123.c
 ```
 
 * When using multiple distributed machines (executes all cores of all machines)
 ```
-$ ./03_prepare_prerequisites_on_distributed_machines.py --subject libxml2 --buggy-versions-set <buggy-version-set-name>
+$ ./03_prepare_prerequisites_on_distributed_machines.py --subject libxml2 --buggy-versions-set <buggy-version-set-name> [--use-excluded-failing-tcs] [--exclude-ccts]
 $ ./03-1_prepare_prerequisites_on_distributed_mahcines.sh
 ```
 

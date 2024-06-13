@@ -130,7 +130,7 @@ def get_lines_executed_by_failing_tcs(version_dir, target_code_file_path, buggy_
         filename = target_file.split('/')[-1]
         execed_lines[filename] = []
 
-    # TODO: read the file and return the content
+    # read the file and return the content
     buggy_filename = target_code_file_path.split('/')[-1]
     executed_buggy_line = False
     for key, tcs in lines_executed_by_failing_tc_json.items():

@@ -247,6 +247,8 @@ def run_tc(tc_script_name, tc_dir):
 
 
 def write_results(result_csv_file, target_file, mutant_id, lineno, build_result, tc_outcome):
+    # TODO: write list of tcs in each criteria
+    # add p2f_tcs, p2p_tcs, f2p_tcs, f2f_tcs
     build_str = 'PASS' if build_result else 'FAIL'
     # tc_outcome: {'p2f': 2, 'p2p': 3, 'f2p': 0, 'f2f': 1}
     full_tc_outcome = f"{tc_outcome['p2f']},{tc_outcome['p2p']},{tc_outcome['f2p']},{tc_outcome['f2f']}"

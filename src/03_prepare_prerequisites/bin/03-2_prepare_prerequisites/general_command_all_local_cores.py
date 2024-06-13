@@ -40,10 +40,10 @@ general_command_for_worker = 'general_command.py'
 def main():
     parser = make_parser()
     args = parser.parse_args()
-    start_process(args.subject, args.use_excluded_failing_tcs)
+    start_process(args.subject, args.use_excluded_failing_tcs, args.exclude_ccts)
 
 
-def start_process(subject_name, use_excluded_failing_tcs):
+def start_process(subject_name, use_excluded_failing_tcs, exclude_ccts):
 
     subject_working_dir = prepare_prerequisite_src_dir / f"{subject_name}-working_directory"
     assert subject_working_dir.exists(), f"Working directory {subject_working_dir} does not exist"
@@ -63,7 +63,7 @@ def start_process(subject_name, use_excluded_failing_tcs):
 
         proc = multiprocessing.Process(
             target=execute_worker_function,
-            args=(subject_name, worker, use_excluded_failing_tcs)
+            args=(subject_name, worker, use_excluded_failing_tcs, exclude_ccts)
         )
 
         jobs.append(proc)
@@ -74,11 +74,13 @@ def start_process(subject_name, use_excluded_failing_tcs):
 
     print('Successfully executed the worker scripts')
 
-def execute_worker_function(subject_name, worker_name, use_excluded_failing_tcs):
+def execute_worker_function(subject_name, worker_name, use_excluded_failing_tcs, exclude_ccts):
     # 1. Execute worker
     cmd = ['python3', general_command_for_worker, '--subject', subject_name, '--worker', worker_name]
     if use_excluded_failing_tcs:
         cmd.append('--use-excluded-failing-tcs')
+    if exclude_ccts:
+        cmd.append('--exclude-ccts')
     res = sp.run(cmd, stderr=sp.PIPE, stdout=sp.PIPE)
     if res.returncode != 0:
         raise Exception('Failed to execute worker script')
@@ -121,6 +123,7 @@ def make_parser():
     parser = argparse.ArgumentParser(description='Copy subject to working directory')
     parser.add_argument('--subject', type=str, help='Subject name', required=True)
     parser.add_argument('--use-excluded-failing-tcs', action='store_true', help='Use excluded failing test cases')
+    exclude_ccts = parser.add_argument('--exclude-ccts', action='store_true', help='Exclude CCTs')
     return parser
 
 

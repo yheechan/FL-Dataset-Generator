@@ -37,10 +37,10 @@ real_world_buggy_versions = 'real_world_buggy_versions'
 def main():
     parser = make_parser()
     args = parser.parse_args()
-    start_process(args.subject, args.buggy_versions_set, args.use_excluded_failing_tcs)
+    start_process(args.subject, args.buggy_versions_set, args.use_excluded_failing_tcs, args.exclude_ccts)
 
 
-def start_process(subject_name, buggy_versions_set, use_excluded_failing_tcs):
+def start_process(subject_name, buggy_versions_set, use_excluded_failing_tcs, exclude_ccts):
     global configure_json_file
 
     subject_working_dir = prepare_prerequisites_dir / f"{subject_name}-working_directory"
@@ -61,7 +61,7 @@ def start_process(subject_name, buggy_versions_set, use_excluded_failing_tcs):
     distribution_machineCore2bugsList = assign_buggy_versions(configs, subject_working_dir, buggy_versions, machine_cores_list)
 
     # 3. make script to execute test mutants on distributed machines
-    make_prerequisites_data(configs, subject_working_dir, distribution_machineCore2bugsList, use_excluded_failing_tcs)
+    make_prerequisites_data(configs, subject_working_dir, distribution_machineCore2bugsList, use_excluded_failing_tcs, exclude_ccts)
 
 
 def get_buggy_versions(subject_name, buggy_versions_set):
@@ -139,7 +139,7 @@ def assign_buggy_versions(configs, subject_working_dir, buggy_versions, machine_
     
     return distribution_machineCore2bugsList
 
-def make_prerequisites_data(configs, subject_working_dir, distribution_machineCore2bugsList, use_excluded_failing_tcs):
+def make_prerequisites_data(configs, subject_working_dir, distribution_machineCore2bugsList, use_excluded_failing_tcs, exclude_ccts):
     global bin_dir
 
     home_directory = configs['home_directory']
@@ -155,19 +155,18 @@ def make_prerequisites_data(configs, subject_working_dir, distribution_machineCo
     cnt = 0
     laps = 50
     machine_list = []
+    optional_flags = ''
+    if use_excluded_failing_tcs:
+        optional_flags += '--use-excluded-failing-tcs '
+    if exclude_ccts:
+        optional_flags += '--exclude-ccts '
     for machine_core, buggy_versions_list in distribution_machineCore2bugsList.items():
         machine_id = machine_core.split(':')[0]
         core_id = machine_core.split(':')[1]
         worker = f"{machine_id}/{core_id}"
-
-        if use_excluded_failing_tcs:
-            cmd = "ssh {} \"cd {} && ./general_command.py --subject {} --worker {} --use-excluded-failing-tcs > prepare_prerequisites.{} 2>&1\" & \n".format(
-                machine_id, machine_bin_dir, subject_name, worker, machine_core
-            )
-        else:
-            cmd = "ssh {} \"cd {} && ./general_command.py --subject {} --worker {} > prepare_prerequisites.{} 2>&1\" & \n".format(
-                machine_id, machine_bin_dir, subject_name, worker, machine_core
-            )
+        cmd = "ssh {} \"cd {} && ./general_command.py --subject {} --worker {} {} > prepare_prerequisites.{} 2>&1\" & \n".format(
+            machine_id, machine_bin_dir, subject_name, worker, optional_flags, core_id
+        )
         bash_file.write(cmd)
 
         cnt += 1
@@ -196,6 +195,7 @@ def make_parser():
     parser.add_argument('--subject', type=str, help='Subject name', required=True)
     parser.add_argument('--buggy-versions-set', type=str, help='Buggy versions set', required=True)
     parser.add_argument('--use-excluded-failing-tcs', action='store_true', help='Use excluded failing test cases')
+    parser.add_argument('--exclude-ccts', action='store_true', help='Exclude CCTs')
     return parser
 
 def read_configs(subject_name, subject_working_dir):

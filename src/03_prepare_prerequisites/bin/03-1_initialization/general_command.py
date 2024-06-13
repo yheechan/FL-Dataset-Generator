@@ -40,21 +40,21 @@ def start_process(subject_name, buggy_versions_set):
     print('>> Distributed subject repository')
     
     # 4. distribute config directory
-    cmd = ['python3', distribute_config, '--subject', subject_name]
+    cmd = ['python3', distribute_config, '--subject', subject_name, '--buggy-versions-set', buggy_versions_set]
     res = sp.run(cmd)
     if res.returncode != 0:
         raise Exception('Failed to execute distribute config directory script')
     print('>> Distributed config directory')
     
     # 5. distribute prepare prerequisites command
-    cmd = ['python3', distribute_prepare_prerequisites_cmd, '--subject', subject_name]
+    cmd = ['python3', distribute_prepare_prerequisites_cmd, '--subject', subject_name, '--buggy-versions-set', buggy_versions_set]
     res = sp.run(cmd)
     if res.returncode != 0:
         raise Exception('Failed to execute distribute prepare prerequisites command script')
     print('>> Distributed prepare prerequisites command')
     
     # 6. distribute external tools
-    cmd = ['python3', distribute_external_tools, '--subject', subject_name]
+    cmd = ['python3', distribute_external_tools, '--subject', subject_name, '--buggy-versions-set', buggy_versions_set]
     res = sp.run(cmd)
     if res.returncode != 0:
         raise Exception('Failed to execute distribute external tools script')
